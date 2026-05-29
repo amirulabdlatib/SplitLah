@@ -45,7 +45,7 @@ export default function DashboardPage() {
                     <p className="text-sm text-muted-foreground mt-0.5">Here&apos;s an overview of your bills.</p>
                 </div>
                 <Button asChild className="sm:hidden bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl gap-2">
-                    <Link href="/dashboard/create">
+                    <Link href="/bills/create">
                         <Plus className="w-4 h-4" />
                         New bill
                     </Link>
@@ -73,7 +73,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-foreground">Your bills</h2>
                     <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 text-sm rounded-lg px-4 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
-                        <Link href="/dashboard/create">
+                        <Link href="/bills/create">
                             <Plus className="w-3.5 h-3.5" />
                             New bill
                         </Link>
