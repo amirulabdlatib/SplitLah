@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { motion } from "framer-motion";
-import { LogOut, Moon, Sun, Wallet } from "lucide-react";
+import { LogOut, Moon, Settings, Sun, Wallet } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -64,6 +64,13 @@ export default function DashboardNavbar() {
                                         <p className="text-xs text-muted-foreground truncate">ahmad@example.com</p>
                                     </div>
                                 </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild className="rounded-lg cursor-pointer gap-2">
+                                    <Link href="/settings">
+                                        <Settings className="w-4 h-4" />
+                                        Settings
+                                    </Link>
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="rounded-lg cursor-pointer gap-2 text-destructive focus:text-destructive">
                                     <LogOut className="w-4 h-4" />
