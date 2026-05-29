@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion, type Variants } from "framer-motion";
-import { ArrowRight, CheckCircle, Clock, Copy, Plus, Receipt, TrendingUp, Users, Wallet } from "lucide-react";
+import { CheckCircle, Clock, Copy, Plus, Receipt, TrendingUp, Users, Wallet } from "lucide-react";
 import Link from "next/link";
 
 const stats = [
@@ -72,10 +72,10 @@ export default function DashboardPage() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}>
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-foreground">Your bills</h2>
-                    <Button asChild variant="ghost" size="sm" className="text-primary hover:text-primary gap-1 text-sm">
-                        <Link href="/dashboard/bills">
-                            View all
-                            <ArrowRight className="w-3.5 h-3.5" />
+                    <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 text-sm rounded-lg px-4 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
+                        <Link href="/dashboard/create">
+                            <Plus className="w-3.5 h-3.5" />
+                            New bill
                         </Link>
                     </Button>
                 </div>

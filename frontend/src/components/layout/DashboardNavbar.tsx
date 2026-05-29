@@ -1,10 +1,9 @@
 "use client";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { motion } from "framer-motion";
-import { LogOut, Moon, Plus, Settings, Sun, Wallet } from "lucide-react";
+import { LogOut, Moon, Sun, Wallet } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -35,14 +34,6 @@ export default function DashboardNavbar() {
 
                     {/* Right side */}
                     <div className="flex items-center gap-2">
-                        {/* Create bill CTA */}
-                        <Button asChild size="sm" className="hidden sm:flex bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg px-4 gap-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
-                            <Link href="/dashboard/create">
-                                <Plus className="w-4 h-4" />
-                                New bill
-                            </Link>
-                        </Button>
-
                         {/* Theme toggle */}
                         {mounted && (
                             <motion.button
@@ -63,7 +54,7 @@ export default function DashboardNavbar() {
                                     <Avatar className="w-8 h-8">
                                         <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">AA</AvatarFallback>
                                     </Avatar>
-                                    <span className="hidden sm:block text-sm font-medium text-foreground max-w-[120px] truncate">Ahmad Amirul</span>
+                                    <span className="hidden sm:block text-sm font-medium text-foreground max-w-30 truncate">Ahmad Amirul</span>
                                 </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-52 rounded-xl">
@@ -73,13 +64,6 @@ export default function DashboardNavbar() {
                                         <p className="text-xs text-muted-foreground truncate">ahmad@example.com</p>
                                     </div>
                                 </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem asChild className="rounded-lg cursor-pointer gap-2">
-                                    <Link href="/dashboard/settings">
-                                        <Settings className="w-4 h-4" />
-                                        Settings
-                                    </Link>
-                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="rounded-lg cursor-pointer gap-2 text-destructive focus:text-destructive">
                                     <LogOut className="w-4 h-4" />
