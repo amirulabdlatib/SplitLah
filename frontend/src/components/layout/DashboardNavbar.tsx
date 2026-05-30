@@ -1,16 +1,30 @@
 "use client";
 
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
+import { useAuthStore } from "@/stores/useAuthStore";
 import { motion } from "framer-motion";
 import { LogOut, Moon, Settings, Sun, Wallet } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function DashboardNavbar() {
     const { resolvedTheme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
+
+    const logout = useAuthStore((state) => state.logout);
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        await logout();
+        toast.success("Logout successfully.");
+        router.push("/");
+    };
 
     useEffect(() => {
         setTimeout(() => setMounted(true), 0);
@@ -72,10 +86,29 @@ export default function DashboardNavbar() {
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="rounded-lg cursor-pointer gap-2 text-destructive focus:text-destructive">
-                                    <LogOut className="w-4 h-4" />
-                                    Sign out
-                                </DropdownMenuItem>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem
+                                            onSelect={(e) => e.preventDefault()} // prevent dropdown from closing
+                                            className="rounded-lg cursor-pointer gap-2 text-destructive focus:text-destructive"
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                            Sign out
+                                        </DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Sign out?</AlertDialogTitle>
+                                            <AlertDialogDescription>Are you sure you want to sign out of your account?</AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                                Sign out
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
