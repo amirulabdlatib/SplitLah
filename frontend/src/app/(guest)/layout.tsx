@@ -2,6 +2,7 @@
 
 import { useIsAuthenticated } from "@/stores/auth.selectors";
 import { WithChildren } from "@/types/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Loading from "../loading";
@@ -46,7 +47,9 @@ export default function AuthLayout({ children }: WithChildren) {
                             <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
                         </svg>
                     </div>
-                    <span className="text-white font-bold text-xl tracking-tight">SplitLah</span>
+                    <Link href="/" className="text-white font-bold text-xl tracking-tight">
+                        SplitLah
+                    </Link>
                 </div>
 
                 {/* Center quote */}
