@@ -2,20 +2,47 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useAuthErrors, useAuthPending } from "@/stores/auth.selectors";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { LoginPayload } from "@/types/auth";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Loader2, Lock, Mail, Wallet } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const loginAction = useAuthStore((state) => state.login);
+    const errors = useAuthErrors();
+    const clearErrors = useAuthStore((state) => state.clearErrors);
+    const isPending = useAuthPending();
+    const router = useRouter();
+
+    useEffect(() => {
+        clearErrors();
+    }, [clearErrors]);
+
+    const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setLoading(true);
-        setTimeout(() => setLoading(false), 2000);
+
+        const formData = new FormData(e.currentTarget);
+
+        const payload: LoginPayload = {
+            email: formData.get("email") as string,
+            password: formData.get("password") as string,
+        };
+
+        try {
+            await loginAction(payload);
+            toast.success("Login successful. Welcome to SplitLah");
+            router.push("/dashboard");
+        } catch {
+            toast.error("Login Failed. Please try again");
+        }
     };
 
     const handleGoogle = () => {
@@ -45,7 +72,7 @@ export default function LoginPage() {
             <Button
                 type="button"
                 variant="outline"
-                className="w-full h-11 rounded-xl border-border font-medium gap-3 hover:bg-muted transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] mb-6"
+                className="w-full h-11 rounded-xl border-border font-medium gap-3 hover:bg-muted transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] mb-6 hover:cursor-pointer"
                 onClick={handleGoogle}
                 disabled={googleLoading}
             >
@@ -78,10 +105,11 @@ export default function LoginPage() {
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <input
                             type="email"
+                            name="email"
                             placeholder="you@example.com"
-                            required
                             className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200"
                         />
+                        {errors?.email && <p className="text-xs text-destructive">{errors.email[0]}</p>}
                     </div>
                 </div>
 
@@ -96,20 +124,25 @@ export default function LoginPage() {
                     <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <input
+                            name="password"
                             type={showPassword ? "text" : "password"}
                             placeholder="••••••••"
-                            required
                             className="w-full h-11 pl-10 pr-11 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200"
                         />
                         <button type="button" onClick={() => setShowPassword((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                     </div>
+                    {errors?.password && <p className="text-xs text-destructive">{errors.password[0]}</p>}
                 </div>
 
                 {/* Submit */}
-                <Button type="submit" disabled={loading} className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]">
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign in"}
+                <Button
+                    type="submit"
+                    disabled={isPending}
+                    className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] hover:cursor-pointer"
+                >
+                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign in"}
                 </Button>
             </form>
 
