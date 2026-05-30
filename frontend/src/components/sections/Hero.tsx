@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useIsAuthenticated } from "@/stores/auth.selectors";
 import { motion, type Variants } from "framer-motion";
 import { ArrowRight, CheckCircle, Users, Wallet } from "lucide-react";
 import Link from "next/link";
@@ -23,6 +24,9 @@ const participants = [
 ];
 
 export default function Hero() {
+    const isAuthenticated = useIsAuthenticated();
+    const href = isAuthenticated ? "/dashboard" : "/login";
+
     return (
         <section className="relative min-h-[90vh] flex items-center overflow-hidden">
             {/* Subtle background grid */}
@@ -65,7 +69,7 @@ export default function Hero() {
                         {/* CTAs */}
                         <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show" className="flex flex-col sm:flex-row gap-3 mb-10">
                             <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl px-6 gap-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
-                                <Link href="/dashboard">
+                                <Link href={href}>
                                     Create a bill free
                                     <ArrowRight className="w-4 h-4" />
                                 </Link>
