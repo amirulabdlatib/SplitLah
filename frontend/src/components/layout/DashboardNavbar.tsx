@@ -3,6 +3,7 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAuthUser } from "@/stores/auth.selectors";
 
 import { useAuthStore } from "@/stores/useAuthStore";
 import { motion } from "framer-motion";
@@ -16,6 +17,7 @@ import { toast } from "sonner";
 export default function DashboardNavbar() {
     const { resolvedTheme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
+    const user = useAuthUser();
 
     const logout = useAuthStore((state) => state.logout);
     const router = useRouter();
@@ -32,6 +34,7 @@ export default function DashboardNavbar() {
 
     const toggleTheme = () => setTheme(resolvedTheme === "dark" ? "light" : "dark");
 
+    console.log(user);
     return (
         <motion.header initial={{ y: -60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }} className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -68,14 +71,14 @@ export default function DashboardNavbar() {
                                     <Avatar className="w-8 h-8">
                                         <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">AA</AvatarFallback>
                                     </Avatar>
-                                    <span className="hidden sm:block text-sm font-medium text-foreground max-w-30 truncate">Ahmad Amirul</span>
+                                    <span className="hidden sm:block text-sm font-medium text-foreground max-w-30 truncate">{user?.name}</span>
                                 </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-52 rounded-xl">
                                 <DropdownMenuLabel className="font-normal">
                                     <div className="flex flex-col gap-0.5">
-                                        <p className="text-sm font-semibold text-foreground">Ahmad Amirul</p>
-                                        <p className="text-xs text-muted-foreground truncate">ahmad@example.com</p>
+                                        <p className="text-sm font-semibold text-foreground">{user?.name}</p>
+                                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
