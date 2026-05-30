@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useIsAuthenticated } from "@/stores/auth.selectors";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, Moon, Sun, Wallet, X } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -18,6 +19,9 @@ export default function Navbar() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const toggleTheme = () => setTheme(resolvedTheme === "dark" ? "light" : "dark");
+    const isAuthenticated = useIsAuthenticated();
+
+    const href = isAuthenticated ? "/dashboard" : "/login";
 
     useEffect(() => {
         setTimeout(() => setMounted(true), 0);
@@ -72,7 +76,7 @@ export default function Navbar() {
                             {/* CTA */}
                             <div className="hidden md:block">
                                 <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg px-4">
-                                    <Link href="/dashboard">Create a bill</Link>
+                                    <Link href={href}>Create a bill</Link>
                                 </Button>
                             </div>
 
@@ -113,7 +117,7 @@ export default function Navbar() {
                                 ))}
                                 <div className="pt-2 pb-1">
                                     <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg">
-                                        <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
+                                        <Link href={href} onClick={() => setMobileOpen(false)}>
                                             Create a bill
                                         </Link>
                                     </Button>
