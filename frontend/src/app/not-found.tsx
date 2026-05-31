@@ -1,11 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useIsAuthenticated } from "@/stores/auth.selectors";
 import { motion } from "framer-motion";
 import { ArrowLeft, Wallet } from "lucide-react";
 import Link from "next/link";
 
 export default function NotFound() {
+    const isAuthenticated = useIsAuthenticated();
+
     return (
         <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background relative overflow-hidden">
             {/* Background grid */}
@@ -55,9 +58,11 @@ export default function NotFound() {
                             Back to home
                         </Link>
                     </Button>
-                    <Button asChild className="flex-1 h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
-                        <Link href="/dashboard">Create a bill</Link>
-                    </Button>
+                    {isAuthenticated && (
+                        <Button asChild className="flex-1 h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
+                            <Link href="/dashboard">Dashboard</Link>
+                        </Button>
+                    )}
                 </motion.div>
 
                 {/* Bottom label */}

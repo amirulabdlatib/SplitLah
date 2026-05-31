@@ -22,6 +22,7 @@ export default function Navbar() {
     const isAuthenticated = useIsAuthenticated();
 
     const href = isAuthenticated ? "/dashboard" : "/login";
+    const labelTextNavbar = isAuthenticated ? "Dashboard" : "Create a bill";
 
     const links = isAuthenticated ? [{ label: "Dashboard", href: "/dashboard" }, ...navLinks] : navLinks;
 
@@ -78,7 +79,7 @@ export default function Navbar() {
                             {/* CTA */}
                             <div className="hidden md:block">
                                 <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg px-4">
-                                    <Link href={href}>Create a bill</Link>
+                                    <Link href={href}>{labelTextNavbar}</Link>
                                 </Button>
                             </div>
 
