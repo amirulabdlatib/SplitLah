@@ -4,10 +4,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuthUser } from "@/stores/auth.selectors";
-
 import { useAuthStore } from "@/stores/useAuthStore";
 import { motion } from "framer-motion";
-import { LogOut, Moon, Settings, Sun, Wallet } from "lucide-react";
+import { LayoutDashboard, LogOut, Moon, Settings, Sun, Wallet } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,7 +33,6 @@ export default function DashboardNavbar() {
 
     const toggleTheme = () => setTheme(resolvedTheme === "dark" ? "light" : "dark");
 
-    console.log(user);
     return (
         <motion.header initial={{ y: -60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }} className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -82,6 +80,12 @@ export default function DashboardNavbar() {
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild className="rounded-lg cursor-pointer gap-2">
+                                    <Link href="/dashboard">
+                                        <LayoutDashboard className="w-4 h-4" />
+                                        Dashboard
+                                    </Link>
+                                </DropdownMenuItem>
                                 <DropdownMenuItem asChild className="rounded-lg cursor-pointer gap-2">
                                     <Link href="/settings">
                                         <Settings className="w-4 h-4" />

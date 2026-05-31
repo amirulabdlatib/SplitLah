@@ -23,6 +23,8 @@ export default function Navbar() {
 
     const href = isAuthenticated ? "/dashboard" : "/login";
 
+    const links = isAuthenticated ? [{ label: "Dashboard", href: "/dashboard" }, ...navLinks] : navLinks;
+
     useEffect(() => {
         setTimeout(() => setMounted(true), 0);
     }, []);
@@ -49,7 +51,7 @@ export default function Navbar() {
 
                         {/* Desktop Nav */}
                         <nav className="hidden md:flex items-center gap-1">
-                            {navLinks.map((link, i) => (
+                            {links.map((link, i) => (
                                 <motion.div key={link.href} initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.07 }}>
                                     <Link href={link.href} className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-all duration-200">
                                         {link.label}
@@ -104,7 +106,7 @@ export default function Navbar() {
                             className="md:hidden overflow-hidden border-t border-border bg-background/95 backdrop-blur-md"
                         >
                             <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col gap-1">
-                                {navLinks.map((link, i) => (
+                                {links.map((link, i) => (
                                     <motion.div key={link.href} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}>
                                         <Link
                                             href={link.href}

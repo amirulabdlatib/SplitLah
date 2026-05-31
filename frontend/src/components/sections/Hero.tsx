@@ -25,7 +25,7 @@ const participants = [
 
 export default function Hero() {
     const isAuthenticated = useIsAuthenticated();
-    const href = isAuthenticated ? "/dashboard" : "/login";
+    const href = isAuthenticated ? "/bills/create" : "/login";
 
     return (
         <section className="relative min-h-[90vh] flex items-center overflow-hidden">
