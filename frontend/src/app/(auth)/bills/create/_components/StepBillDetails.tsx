@@ -2,8 +2,9 @@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import { CalendarDays, ChevronDown, Receipt } from "lucide-react";
+import React from "react";
 
 interface StepBillDetailsProps {
     title: string;
@@ -29,6 +30,14 @@ const splitTypes = [
     { value: "custom", label: "Custom amount" },
 ];
 
+const DATE_PRESETS = [
+    { label: "Today", value: 0 },
+    { label: "Tomorrow", value: 1 },
+    { label: "In 3 days", value: 3 },
+    { label: "In a week", value: 7 },
+    { label: "In 2 weeks", value: 14 },
+];
+
 export function StepBillDetails({
     title,
     setTitle,
@@ -47,6 +56,8 @@ export function StepBillDetails({
     nextStep,
     prevStep,
 }: StepBillDetailsProps) {
+    const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+
     return (
         <div className="space-y-6">
             <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
@@ -159,7 +170,45 @@ export function StepBillDetails({
                                 </button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar mode="single" selected={dueDate} onSelect={setDueDate} disabled={(date) => date < new Date()} />
+                                <Calendar mode="single" selected={dueDate} onSelect={setDueDate} month={currentMonth} onMonthChange={setCurrentMonth} disabled={(date) => date < new Date()} fixedWeeks className="w-full" />
+                                <div className="border-t p-3 space-y-2">
+                                    <div className="flex gap-2">
+                                        {DATE_PRESETS.slice(0, 3).map((preset) => (
+                                            <Button
+                                                key={preset.value}
+                                                variant="outline"
+                                                size="sm"
+                                                className="flex-1"
+                                                onClick={() => {
+                                                    const newDate = addDays(new Date(), preset.value);
+                                                    setDueDate(newDate);
+                                                    clearError("due_date");
+                                                    setCurrentMonth(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
+                                                }}
+                                            >
+                                                {preset.label}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {DATE_PRESETS.slice(3).map((preset) => (
+                                            <Button
+                                                key={preset.value}
+                                                variant="outline"
+                                                size="sm"
+                                                className="flex-1"
+                                                onClick={() => {
+                                                    const newDate = addDays(new Date(), preset.value);
+                                                    setDueDate(newDate);
+                                                    clearError("due_date");
+                                                    setCurrentMonth(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
+                                                }}
+                                            >
+                                                {preset.label}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </div>
                             </PopoverContent>
                         </Popover>
                         {errors.due_date && <p className="text-xs text-destructive">{errors.due_date}</p>}
