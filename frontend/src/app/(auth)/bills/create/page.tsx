@@ -1,6 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { ArrowLeft, CalendarDays, ChevronDown, Plus, Receipt, Trash2, Upload, Users, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -25,7 +28,7 @@ export default function CreateBillPage() {
     const [description, setDescription] = useState("");
     const [totalAmount, setTotalAmount] = useState("");
     const [splitType, setSplitType] = useState("equal");
-    const [dueDate, setDueDate] = useState("");
+    const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
     const [autoConfirm, setAutoConfirm] = useState(false);
     const [billFile, setBillFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
@@ -157,15 +160,20 @@ export default function CreateBillPage() {
                             <label className="text-sm font-medium text-foreground">
                                 Due date <span className="text-destructive">*</span>
                             </label>
-                            <div className="relative">
-                                <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                                <input
-                                    type="date"
-                                    value={dueDate}
-                                    onChange={(e) => setDueDate(e.target.value)}
-                                    className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200"
-                                />
-                            </div>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <button
+                                        type="button"
+                                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200 text-left relative"
+                                    >
+                                        <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                                        {dueDate ? format(dueDate, "d MMM yyyy") : <span className="text-muted-foreground">Pick a date</span>}
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar mode="single" selected={dueDate} onSelect={setDueDate} disabled={(date) => date < new Date()} />
+                                </PopoverContent>
+                            </Popover>
                         </div>
 
                         <div className="space-y-1.5">
@@ -182,7 +190,6 @@ export default function CreateBillPage() {
                             <p className="text-xs text-muted-foreground">Auto-approve payments without manual review</p>
                         </div>
                     </div>
-
                     {/* Bill file upload */}
                     <div className="space-y-1.5">
                         <label className="text-sm font-medium text-foreground">

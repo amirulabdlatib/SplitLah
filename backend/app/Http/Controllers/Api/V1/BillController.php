@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bill;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 
 class BillController extends Controller
@@ -39,5 +41,12 @@ class BillController extends Controller
         return response()->json([
             'bills' => $bills,
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        return response()->json([
+            'message' => "Bill created successfully"
+        ], Response::HTTP_CREATED);
     }
 }
