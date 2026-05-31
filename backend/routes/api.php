@@ -17,6 +17,6 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 Route::middleware(['throttle:600,1', 'auth:sanctum'])->group(function () {
     Route::prefix('v1')->group(function () {
         Route::get('/bills', [BillController::class, 'index']);
-        Route::post('/bills', [BillController::class, 'create']);
+        Route::post('/bills', [BillController::class, 'store']);
     });
 });

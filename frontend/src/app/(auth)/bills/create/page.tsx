@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useStoreBill } from "@/features/bills/hooks/useBills";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { ArrowLeft, CalendarDays, ChevronDown, Plus, Receipt, Trash2, Upload, Users, X } from "lucide-react";
@@ -31,9 +32,19 @@ export default function CreateBillPage() {
     const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
     const [autoConfirm, setAutoConfirm] = useState(false);
     const [billFile, setBillFile] = useState<File | null>(null);
-    const [loading, setLoading] = useState(false);
     const [participants, setParticipants] = useState<Participant[]>([{ id: 1, name: "", email: "", phone: "", amount_owed: "" }]);
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const router = useRouter();
+
+    const { mutateAsync: createBill, isPending: loading } = useStoreBill();
+
+    const clearError = (key: string) => {
+        setErrors((prev) => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+        });
+    };
 
     const addParticipant = () => {
         setParticipants((prev) => [...prev, { id: Date.now(), name: "", email: "", phone: "", amount_owed: "" }]);
@@ -56,12 +67,37 @@ export default function CreateBillPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
-        await new Promise((r) => setTimeout(r, 1500));
-        setLoading(false);
-        toast.success("Bill created successfully!", {
-            description: "Share the link with your participants.",
-        });
+        setErrors({});
+
+        try {
+            await createBill({
+                title,
+                description,
+                total_amount: totalAmount,
+                split_type: splitType as "equal" | "custom",
+                due_date: dueDate ? format(dueDate, "yyyy-MM-dd") : "",
+                auto_confirm: autoConfirm,
+                bill_file: billFile,
+                participants,
+            });
+
+            toast.success("Bill created successfully!", {
+                description: "Share the link with your participants.",
+            });
+
+            router.push("/dashboard");
+        } catch (err: any) {
+            const serverErrors = err?.response?.data?.errors;
+            if (serverErrors) {
+                const flattened: Record<string, string> = {};
+                Object.entries(serverErrors).forEach(([key, val]) => {
+                    flattened[key] = Array.isArray(val) ? val[0] : (val as string);
+                });
+                setErrors(flattened);
+            } else {
+                toast.error(err?.response?.data?.message ?? "Something went wrong.");
+            }
+        }
     };
 
     return (
@@ -95,9 +131,15 @@ export default function CreateBillPage() {
                             type="text"
                             placeholder="e.g. Dinner @ Pelita, Langkawi Trip"
                             value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className="w-full h-11 px-4 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200"
+                            onChange={(e) => {
+                                setTitle(e.target.value);
+                                clearError("title");
+                            }}
+                            className={`w-full h-11 px-4 rounded-xl border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200 ${
+                                errors.title ? "border-destructive focus:ring-destructive/30" : "border-border"
+                            }`}
                         />
+                        {errors.title && <p className="text-xs text-destructive">{errors.title}</p>}
                     </div>
 
                     {/* Description */}
@@ -127,12 +169,21 @@ export default function CreateBillPage() {
                                     type="number"
                                     placeholder="0.00"
                                     value={totalAmount}
-                                    onChange={(e) => setTotalAmount(e.target.value)}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (value === "" || /^\d+(\.\d{0,2})?$/.test(value)) {
+                                            setTotalAmount(value);
+                                            clearError("total_amount");
+                                        }
+                                    }}
                                     min="0"
                                     step="0.01"
-                                    className="w-full h-11 pl-12 pr-4 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200"
+                                    className={`w-full h-11 pl-12 pr-4 rounded-xl border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200 ${
+                                        errors.total_amount ? "border-destructive focus:ring-destructive/30" : "border-border"
+                                    }`}
                                 />
                             </div>
+                            {errors.total_amount && <p className="text-xs text-destructive">{errors.total_amount}</p>}
                         </div>
 
                         <div className="space-y-1.5">
@@ -164,7 +215,10 @@ export default function CreateBillPage() {
                                 <PopoverTrigger asChild>
                                     <button
                                         type="button"
-                                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200 text-left relative"
+                                        onClick={() => clearError("due_date")}
+                                        className={`w-full h-11 pl-10 pr-4 rounded-xl border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200 text-left relative ${
+                                            errors.due_date ? "border-destructive focus:ring-destructive/30" : "border-border"
+                                        }`}
                                     >
                                         <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                                         {dueDate ? format(dueDate, "d MMM yyyy") : <span className="text-muted-foreground">Pick a date</span>}
@@ -174,6 +228,7 @@ export default function CreateBillPage() {
                                     <Calendar mode="single" selected={dueDate} onSelect={setDueDate} disabled={(date) => date < new Date()} />
                                 </PopoverContent>
                             </Popover>
+                            {errors.due_date && <p className="text-xs text-destructive">{errors.due_date}</p>}
                         </div>
 
                         <div className="space-y-1.5">
@@ -190,6 +245,7 @@ export default function CreateBillPage() {
                             <p className="text-xs text-muted-foreground">Auto-approve payments without manual review</p>
                         </div>
                     </div>
+
                     {/* Bill file upload */}
                     <div className="space-y-1.5">
                         <label className="text-sm font-medium text-foreground">
@@ -220,6 +276,7 @@ export default function CreateBillPage() {
                                 </>
                             )}
                         </label>
+                        {errors.bill_file && <p className="text-xs text-destructive">{errors.bill_file}</p>}
                     </div>
                 </motion.div>
 
@@ -235,6 +292,7 @@ export default function CreateBillPage() {
                         </div>
                         {splitType === "equal" && totalAmount && <span className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full">RM {getEqualShare()} / person</span>}
                     </div>
+                    {errors.participants && <p className="text-xs text-destructive">{errors.participants}</p>}
 
                     {/* Participant rows */}
                     <div className="space-y-3">
@@ -256,39 +314,81 @@ export default function CreateBillPage() {
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <input
-                                        type="text"
-                                        placeholder="Full name *"
-                                        value={p.name}
-                                        onChange={(e) => updateParticipant(p.id, "name", e.target.value)}
-                                        className="h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200"
-                                    />
-                                    <input
-                                        type="tel"
-                                        placeholder="Phone number"
-                                        value={p.phone}
-                                        onChange={(e) => updateParticipant(p.id, "phone", e.target.value)}
-                                        className="h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200"
-                                    />
-                                    <input
-                                        type="email"
-                                        placeholder="Email address"
-                                        value={p.email}
-                                        onChange={(e) => updateParticipant(p.id, "email", e.target.value)}
-                                        className="h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200"
-                                    />
+                                    {/* Name */}
+                                    <div className="space-y-1">
+                                        <input
+                                            type="text"
+                                            placeholder="Full name *"
+                                            value={p.name}
+                                            onChange={(e) => {
+                                                updateParticipant(p.id, "name", e.target.value);
+                                                clearError(`participants.${i}.name`);
+                                            }}
+                                            className={`h-10 w-full px-3 rounded-lg border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200 ${
+                                                errors[`participants.${i}.name`] ? "border-destructive focus:ring-destructive/30" : "border-border"
+                                            }`}
+                                        />
+                                        {errors[`participants.${i}.name`] && <p className="text-xs text-destructive">{errors[`participants.${i}.name`]}</p>}
+                                    </div>
+
+                                    {/* Phone */}
+                                    <div className="space-y-1">
+                                        <input
+                                            type="tel"
+                                            placeholder="Phone number"
+                                            value={p.phone}
+                                            onChange={(e) => {
+                                                updateParticipant(p.id, "phone", e.target.value);
+                                                clearError(`participants.${i}.phone`);
+                                            }}
+                                            className={`h-10 w-full px-3 rounded-lg border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200 ${
+                                                errors[`participants.${i}.phone`] ? "border-destructive focus:ring-destructive/30" : "border-border"
+                                            }`}
+                                        />
+                                        {errors[`participants.${i}.phone`] && <p className="text-xs text-destructive">{errors[`participants.${i}.phone`]}</p>}
+                                    </div>
+
+                                    {/* Email */}
+                                    <div className="space-y-1">
+                                        <input
+                                            type="email"
+                                            placeholder="Email address"
+                                            value={p.email}
+                                            onChange={(e) => {
+                                                updateParticipant(p.id, "email", e.target.value);
+                                                clearError(`participants.${i}.email`);
+                                            }}
+                                            className={`h-10 w-full px-3 rounded-lg border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200 ${
+                                                errors[`participants.${i}.email`] ? "border-destructive focus:ring-destructive/30" : "border-border"
+                                            }`}
+                                        />
+                                        {errors[`participants.${i}.email`] && <p className="text-xs text-destructive">{errors[`participants.${i}.email`]}</p>}
+                                    </div>
+
+                                    {/* Amount owed */}
                                     {splitType === "custom" ? (
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium">RM</span>
-                                            <input
-                                                type="number"
-                                                placeholder="Amount owed"
-                                                value={p.amount_owed}
-                                                onChange={(e) => updateParticipant(p.id, "amount_owed", e.target.value)}
-                                                min="0"
-                                                step="0.01"
-                                                className="h-10 pl-9 pr-3 w-full rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200"
-                                            />
+                                        <div className="space-y-1">
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium">RM</span>
+                                                <input
+                                                    type="number"
+                                                    placeholder="Amount owed"
+                                                    value={p.amount_owed}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        if (value === "" || /^\d+(\.\d{0,2})?$/.test(value)) {
+                                                            updateParticipant(p.id, "amount_owed", value);
+                                                            clearError(`participants.${i}.amount_owed`);
+                                                        }
+                                                    }}
+                                                    min="0"
+                                                    step="0.01"
+                                                    className={`h-10 pl-9 pr-3 w-full rounded-lg border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200 ${
+                                                        errors[`participants.${i}.amount_owed`] ? "border-destructive focus:ring-destructive/30" : "border-border"
+                                                    }`}
+                                                />
+                                            </div>
+                                            {errors[`participants.${i}.amount_owed`] && <p className="text-xs text-destructive">{errors[`participants.${i}.amount_owed`]}</p>}
                                         </div>
                                     ) : (
                                         <div className="h-10 px-3 rounded-lg border border-border/50 bg-muted/50 flex items-center">
@@ -315,9 +415,6 @@ export default function CreateBillPage() {
 
                 {/* Submit */}
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.4 }} className="flex gap-3 pb-8">
-                    <Button type="button" variant="outline" className="flex-1 h-12 rounded-xl border-border font-medium" onClick={() => window.history.back()}>
-                        Cancel
-                    </Button>
                     <Button type="submit" disabled={loading} className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 hover:scale-[1.01] active:scale-[0.98]">
                         {loading ? (
                             <div className="flex items-center gap-2">
