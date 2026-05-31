@@ -19,13 +19,13 @@ const fadeUp: Variants = {
 const participants = [
     { name: "Azlan", amount: "RM 30", paid: true },
     { name: "Syira", amount: "RM 30", paid: true },
-    { name: "Hafiz", amount: "RM 30", paid: false },
-    { name: "Danial", amount: "RM 30", paid: false },
+    { name: "Hafiz", amount: "RM 30", paid: false, pending: true },
+    { name: "Danial", amount: "RM 30", paid: false, pending: false },
 ];
 
 export default function Hero() {
     const isAuthenticated = useIsAuthenticated();
-    const href = isAuthenticated ? "/dashboard" : "/login";
+    const href = isAuthenticated ? "/bills/create" : "/login";
 
     return (
         <section className="relative min-h-[90vh] flex items-center overflow-hidden">
@@ -150,7 +150,13 @@ export default function Hero() {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-sm text-muted-foreground">{p.amount}</span>
-                                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.paid ? "bg-accent text-accent-foreground" : "bg-destructive/10 text-destructive"}`}>{p.paid ? "Paid" : "Unpaid"}</span>
+                                                <span
+                                                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                                        p.paid ? "bg-accent text-accent-foreground" : p.pending ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" : "bg-destructive/10 text-destructive"
+                                                    }`}
+                                                >
+                                                    {p.paid ? "Paid" : p.pending ? "Pending" : "Unpaid"}
+                                                </span>{" "}
                                             </div>
                                         </motion.div>
                                     ))}

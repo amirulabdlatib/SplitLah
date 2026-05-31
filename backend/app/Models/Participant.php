@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ParticipantStatus;
 use Illuminate\Database\Eloquent\Model;
 
 class Participant extends Model
@@ -20,6 +21,8 @@ class Participant extends Model
 
     protected $casts = [
         'paid_at' => 'datetime',
+        'status' => ParticipantStatus::class,
+
     ];
 
     public function bill()
