@@ -78,7 +78,7 @@ export default function DashboardPage() {
                                 <Icon className="w-4 h-4" />
                             </div>
                             {isLoading ? <div className="h-8 w-16 bg-muted rounded animate-pulse mb-1" /> : <p className="text-2xl font-bold text-foreground">{state.value}</p>}
-                            <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{state.label}</p>
                         </motion.div>
                     );
                 })}
