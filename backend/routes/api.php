@@ -18,5 +18,6 @@ Route::middleware(['throttle:600,1', 'auth:sanctum'])->group(function () {
     Route::prefix('v1')->group(function () {
         Route::get('/bills', [BillController::class, 'index']);
         Route::post('/bills', [BillController::class, 'store']);
+        Route::delete('/bills/{bill_uuid}', [BillController::class, 'destroy']);
     });
 });

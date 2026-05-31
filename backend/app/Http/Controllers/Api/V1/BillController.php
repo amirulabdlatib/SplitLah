@@ -11,8 +11,11 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+
 
 class BillController extends Controller
 {
@@ -21,7 +24,7 @@ class BillController extends Controller
         $bills = Bill::with('participants:id,bill_id,status,amount_owed')
             ->where('user_id', Auth::id())
             ->latest()
-            ->select('id', 'title', 'total_amount', 'due_date', 'status')
+            ->select('id', 'title', 'total_amount', 'due_date', 'status', 'bill_uuid')
             ->get()
             ->map(function ($bill) {
                 $totalParticipants = $bill->participants->count();
@@ -33,6 +36,7 @@ class BillController extends Controller
 
                 return [
                     'id'           => $bill->id,
+                    'bill_uuid'    => $bill->bill_uuid,
                     'title'        => $bill->title,
                     'total'        => $bill->total_amount,
                     'collected'    => $collected,
@@ -122,5 +126,53 @@ class BillController extends Controller
             ['message' => 'Bill created successfully'],
             Response::HTTP_CREATED
         );
+    }
+
+    public function destroy(String $bill_uuid)
+    {
+        $bill = Bill::where('bill_uuid', $bill_uuid)->first();
+
+        if (!$bill) {
+            return response()->json([
+                'message' => 'Bill not found'
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($bill->user_id !== Auth::id()) {
+            return response()->json([
+                'message' => 'Unauthorized.'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        try {
+            DB::transaction(function () use ($bill) {
+
+                $participants = Participant::where('bill_id', $bill->id)->get();
+
+                foreach ($participants as $participant) {
+                    if ($participant->receipt_path && Storage::exists($participant->receipt_path)) {
+                        Storage::delete($participant->receipt_path);
+                    }
+                }
+
+                Participant::where('bill_id', $bill->id)->delete();
+
+                if ($bill->bill_file_path && Storage::exists($bill->bill_file_path)) {
+                    Storage::delete($bill->bill_file_path);
+                }
+
+                $bill->delete();
+            });
+
+            return response()->noContent();
+        } catch (\Throwable $e) {
+
+            Log::error('Failed to delete bill.', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'message' => 'Failed to delete bill.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

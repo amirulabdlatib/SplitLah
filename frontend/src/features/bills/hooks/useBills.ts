@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getBills, storeBill } from "../api/bills";
+import { deleteBills, getBills, storeBill } from "../api/bills";
 
 export const useBills = () => {
     return useQuery({
@@ -13,6 +13,17 @@ export const useStoreBill = () => {
 
     return useMutation({
         mutationFn: storeBill,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["bills"] });
+        },
+    });
+};
+
+export const useDeleteBills = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: deleteBills,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["bills"] });
         },

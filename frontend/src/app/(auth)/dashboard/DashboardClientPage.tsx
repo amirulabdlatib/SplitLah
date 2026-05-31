@@ -1,12 +1,13 @@
 "use client";
 
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useBills } from "@/features/bills/hooks/useBills";
+import { useBills, useDeleteBills } from "@/features/bills/hooks/useBills";
 import { useAuthUser } from "@/stores/auth.selectors";
 import type { Bill } from "@/types/bills";
 import { motion, type Variants } from "framer-motion";
-import { CheckCircle, Clock, Copy, Plus, Receipt, TrendingUp, Users, Wallet } from "lucide-react";
+import { CheckCircle, Clock, Copy, Plus, Receipt, Trash2, TrendingUp, Users, Wallet } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -52,6 +53,8 @@ export default function DashboardClientPage() {
     const { data: bills = [], isLoading } = useBills();
 
     const stats = deriveStats(bills);
+
+    const { mutate: deleteBill, isPending: isDeleting } = useDeleteBills();
 
     return (
         <div className="space-y-8">
@@ -173,7 +176,7 @@ export default function DashboardClientPage() {
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.95 }}
                                                     onClick={() => {
-                                                        const url = `${window.location.origin}/bills/${bill.id}`;
+                                                        const url = `${window.location.origin}/bills/${bill.bill_uuid}`;
                                                         navigator.clipboard.writeText(url);
                                                         toast.success("Link copied!");
                                                     }}
@@ -182,8 +185,47 @@ export default function DashboardClientPage() {
                                                 >
                                                     <Copy className="w-3.5 h-3.5" />
                                                 </motion.button>
+
+                                                {/* Delete button */}
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <motion.button
+                                                            whileHover={{ scale: 1.05 }}
+                                                            whileTap={{ scale: 0.95 }}
+                                                            className="w-8 h-8 rounded-lg bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center text-destructive hover:cursor-pointer transition-all duration-200"
+                                                            aria-label="Delete bill"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </motion.button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Delete bill?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                Are you sure you want to delete <span className="font-semibold text-foreground">&quot;{bill.title}&quot;</span>? This will also remove all participants and uploaded files. This
+                                                                action cannot be undone.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction
+                                                                onClick={() =>
+                                                                    deleteBill(bill.bill_uuid, {
+                                                                        onSuccess: () => toast.success("Bill deleted."),
+                                                                        onError: () => toast.error("Failed to delete bill."),
+                                                                    })
+                                                                }
+                                                                disabled={isDeleting}
+                                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                            >
+                                                                {isDeleting ? "Deleting..." : "Delete"}
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+
                                                 <Button asChild size="sm" variant="outline" className="h-8 text-xs rounded-lg border-border hover:bg-muted px-3">
-                                                    <Link href={`/dashboard/bills/${bill.id}`}>View</Link>
+                                                    <Link href={`/dashboard/bills/${bill.bill_uuid}`}>View</Link>
                                                 </Button>
                                             </div>
                                         </div>

@@ -3,6 +3,8 @@ import { StoreBillPayload } from "@/types/bills";
 
 export const getBills = async () => {
     const { data } = await api.get("/api/v1/bills");
+
+    console.log(data.bills);
     return data.bills;
 };
 
@@ -34,4 +36,8 @@ export const storeBill = async (payload: StoreBillPayload) => {
     });
 
     return data;
+};
+
+export const deleteBills = async (bill_uuid: string) => {
+    await api.delete(`/api/v1/bills/${bill_uuid}`);
 };
