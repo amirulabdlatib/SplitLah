@@ -8,6 +8,7 @@ import type { Bill } from "@/types/bills";
 import { motion, type Variants } from "framer-motion";
 import { CheckCircle, Clock, Copy, Plus, Receipt, TrendingUp, Users, Wallet } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 const statusConfig = {
     active: { label: "Active", class: "bg-primary/10 text-primary border-primary/20" },
@@ -124,7 +125,7 @@ export default function DashboardPage() {
                                     initial="hidden"
                                     animate="show"
                                     whileHover={{ y: -2, transition: { duration: 0.2 } }}
-                                    className="group bg-card border border-border rounded-2xl p-5 cursor-pointer transition-shadow duration-200 hover:shadow-sm"
+                                    className="group bg-card border border-border rounded-2xl p-5 transition-shadow duration-200 hover:shadow-sm"
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                                         {/* Left */}
@@ -171,7 +172,12 @@ export default function DashboardPage() {
                                                 <motion.button
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.95 }}
-                                                    className="w-8 h-8 rounded-lg bg-muted hover:bg-muted/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all duration-200"
+                                                    onClick={() => {
+                                                        const url = `${window.location.origin}/bills/${bill.id}`;
+                                                        navigator.clipboard.writeText(url);
+                                                        toast.success("Link copied!");
+                                                    }}
+                                                    className="w-8 h-8 rounded-lg bg-muted hover:bg-muted/80 flex items-center justify-center text-muted-foreground hover:text-foreground hover:cursor-pointer transition-all duration-200"
                                                     aria-label="Copy link"
                                                 >
                                                     <Copy className="w-3.5 h-3.5" />
