@@ -23,6 +23,7 @@ class Bill extends Model
     ];
 
     protected $casts = [
+        'due_date' => 'datetime',
         'status' => BillStatus::class,
     ];
 

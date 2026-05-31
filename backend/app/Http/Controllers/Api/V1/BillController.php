@@ -43,7 +43,7 @@ class BillController extends Controller
                     'percent'      => $percent,
                     'participants' => $totalParticipants,
                     'paid'         => $paidCount,
-                    'due_date'     => $bill->due_date,
+                    'due_date'      => $bill->due_date->format('d M Y'),
                     'status'       => $bill->status,
                 ];
             });
