@@ -7,7 +7,7 @@ import { useBills, useDeleteBills } from "@/features/bills/hooks/useBills";
 import { useAuthUser } from "@/stores/auth.selectors";
 import type { Bill } from "@/types/bills";
 import { motion, type Variants } from "framer-motion";
-import { CheckCircle, Clock, Copy, Plus, Receipt, Trash2, TrendingUp, Users, Wallet } from "lucide-react";
+import { CheckCircle, Clock, Copy, Eye, Plus, Receipt, Trash2, TrendingUp, Users, Wallet } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -186,6 +186,12 @@ export default function DashboardClientPage() {
                                                     <Copy className="w-3.5 h-3.5" />
                                                 </motion.button>
 
+                                                <Button asChild size="icon" variant="outline" className="h-8 w-8 rounded-lg border-border hover:bg-muted">
+                                                    <Link href={`/dashboard/bills/${bill.bill_uuid}`}>
+                                                        <Eye className="w-3.5 h-3.5" />
+                                                    </Link>
+                                                </Button>
+
                                                 {/* Delete button */}
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
@@ -223,10 +229,6 @@ export default function DashboardClientPage() {
                                                         </AlertDialogFooter>
                                                     </AlertDialogContent>
                                                 </AlertDialog>
-
-                                                <Button asChild size="sm" variant="outline" className="h-8 text-xs rounded-lg border-border hover:bg-muted px-3">
-                                                    <Link href={`/dashboard/bills/${bill.bill_uuid}`}>View</Link>
-                                                </Button>
                                             </div>
                                         </div>
                                     </div>
