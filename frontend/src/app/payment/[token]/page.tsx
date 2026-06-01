@@ -2,9 +2,9 @@
 
 import Loading from "@/app/loading";
 import { Button } from "@/components/ui/button";
-import { usePayment } from "@/features/payments/hooks/usePayments";
+import { useConfirmPayment, usePayment } from "@/features/payments/hooks/usePayments";
 import { AnimatePresence, motion } from "framer-motion";
-import { CalendarDays, CheckCircle, Clock, ShieldCheck, Upload, Users, Wallet, X } from "lucide-react";
+import { CalendarDays, CheckCircle, Clock, Copy, CopyCheck, ShieldCheck, Upload, Users, Wallet, X } from "lucide-react";
 import Image from "next/image";
 import { use, useState } from "react";
 import { toast } from "sonner";
@@ -16,8 +16,9 @@ export default function PaymentPage({ params }: { params: Promise<{ token: strin
     const { data, isLoading, isError } = usePayment(token);
 
     const [step, setStep] = useState<Step>("view");
+    const [copied, setCopied] = useState(false);
     const [receipt, setReceipt] = useState<File | null>(null);
-    const [loading, setLoading] = useState(false);
+    const { mutateAsync: confirm, isPending } = useConfirmPayment(token);
 
     if (isLoading) {
         return <Loading />;
@@ -42,13 +43,22 @@ export default function PaymentPage({ params }: { params: Promise<{ token: strin
     const isPaid = current_participant.status === "paid";
 
     const handleConfirm = async () => {
-        setLoading(true);
-        await new Promise((r) => setTimeout(r, 1500));
-        setLoading(false);
-        setStep("success");
-        toast.success("Payment confirmed!", {
-            description: "The organiser will be notified.",
-        });
+        try {
+            await confirm(receipt ?? undefined);
+            setStep("success");
+            toast.success("Payment confirmed!", {
+                description: "The organiser will be notified.",
+            });
+        } catch {
+            toast.error("Something went wrong. Please try again.");
+        }
+    };
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(bill.organiser.payment_acc_no);
+        setCopied(true);
+        toast.success("Copied successfully.");
+        setTimeout(() => setCopied(false), 2000);
     };
 
     return (
@@ -59,9 +69,7 @@ export default function PaymentPage({ params }: { params: Promise<{ token: strin
                         <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
                             <Wallet className="w-3.5 h-3.5 text-primary-foreground" />
                         </div>
-                        <span className="font-bold text-foreground tracking-tight text-sm">
-                            Split<span className="text-primary">Lah</span>
-                        </span>
+                        <span className="font-bold text-foreground tracking-tight text-sm">SplitLah</span>
                     </div>
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <ShieldCheck className="w-3.5 h-3.5" />
@@ -136,8 +144,15 @@ export default function PaymentPage({ params }: { params: Promise<{ token: strin
                                             <span className="font-medium text-foreground">{bill.organiser.name}</span>
                                         </div>
                                         <div className="flex justify-between text-sm">
+                                            <span className="text-muted-foreground">Bank Name</span>
+                                            <span className="font-medium text-foreground">{bill.organiser.bank_name}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">Account</span>
-                                            <span className="font-medium text-foreground">{bill.organiser.payment_acc_no}</span>
+                                            <button onClick={handleCopy} className="flex items-center gap-1.5 font-medium text-foreground hover:text-primary transition-colors">
+                                                {bill.organiser.payment_acc_no}
+                                                {copied ? <CopyCheck className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
+                                            </button>
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">Amount</span>
@@ -209,15 +224,15 @@ export default function PaymentPage({ params }: { params: Promise<{ token: strin
                                 </label>
 
                                 <div className="flex gap-3">
-                                    <Button variant="outline" className="flex-1 h-11 rounded-xl border-border font-medium" onClick={handleConfirm} disabled={loading}>
+                                    <Button variant="outline" className="flex-1 h-11 rounded-xl border-border font-medium" onClick={handleConfirm} disabled={isPending}>
                                         Skip, confirm anyway
                                     </Button>
                                     <Button
                                         className="flex-1 h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 hover:scale-[1.01] active:scale-[0.98]"
                                         onClick={handleConfirm}
-                                        disabled={loading || !receipt}
+                                        disabled={isPending || !receipt}
                                     >
-                                        {loading ? (
+                                        {isPending ? (
                                             <div className="flex items-center gap-2">
                                                 <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                                                 Submitting...

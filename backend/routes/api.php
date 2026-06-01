@@ -25,5 +25,6 @@ Route::middleware(['throttle:600,1', 'auth:sanctum'])->group(function () {
         });
 
         Route::get('/payments/{token}', [PaymentController::class, 'index']);
+        Route::patch('/payments/{token}', [PaymentController::class, 'update']);
     });
 });
