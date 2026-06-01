@@ -1,12 +1,13 @@
 "use client";
 
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useGetBill } from "@/features/bills/hooks/useBills";
+import { useDeleteBills, useGetBill } from "@/features/bills/hooks/useBills";
 import { motion } from "framer-motion";
 import { ArrowLeft, CalendarDays, CheckCircle, Clock, Copy, MessageCircle, Receipt, Trash2, Users, Wallet } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 const statusConfig = {
@@ -18,6 +19,8 @@ const statusConfig = {
 export default function BillDetailPage() {
     const { uuid } = useParams<{ uuid: string }>();
     const { data: bill, isLoading, isError } = useGetBill(uuid);
+    const { mutate: deleteBill, isPending: isDeleting } = useDeleteBills();
+    const router = useRouter();
 
     if (isLoading) {
         return (
@@ -62,10 +65,40 @@ export default function BillDetailPage() {
                             Edit
                         </Link>
                     </Button> */}
-                    <Button variant="outline" size="sm" className="gap-1.5 rounded-lg border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive text-sm">
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Delete
-                    </Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="gap-1.5 rounded-lg border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive text-sm">
+                                <Trash2 className="w-3.5 h-3.5" />
+                                Delete
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Delete bill?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Are you sure you want to delete <span className="font-semibold text-foreground">&quot;{bill.title}&quot;</span>? This will also remove all participants and uploaded files. This action cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={() =>
+                                        deleteBill(bill.uuid, {
+                                            onSuccess: () => {
+                                                toast.success("Bill deleted.");
+                                                router.push("/dashboard");
+                                            },
+                                            onError: () => toast.error("Failed to delete bill."),
+                                        })
+                                    }
+                                    disabled={isDeleting}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                    {isDeleting ? "Deleting..." : "Delete"}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             </div>
 

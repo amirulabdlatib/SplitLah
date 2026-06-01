@@ -13,6 +13,7 @@ export const useGetBill = (bill_uuid: string) => {
         queryKey: ["bills", bill_uuid],
         queryFn: () => getBill(bill_uuid),
         enabled: !!bill_uuid,
+        retry: false,
     });
 };
 
@@ -32,7 +33,8 @@ export const useDeleteBills = () => {
 
     return useMutation({
         mutationFn: deleteBills,
-        onSuccess: () => {
+        onSuccess: (_, bill_uuid) => {
+            queryClient.removeQueries({ queryKey: ["bills", bill_uuid] });
             queryClient.invalidateQueries({ queryKey: ["bills"] });
         },
     });
