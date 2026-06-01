@@ -109,12 +109,6 @@ export default function DashboardClientPage() {
                 ) : bills.length === 0 ? (
                     <div className="bg-card border border-border rounded-2xl p-10 text-center">
                         <p className="text-muted-foreground text-sm">No bills yet. Create your first bill!</p>
-                        <Button asChild size="sm" className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 rounded-lg">
-                            <Link href="/bills/create">
-                                <Plus className="w-3.5 h-3.5" />
-                                New bill
-                            </Link>
-                        </Button>
                     </div>
                 ) : (
                     <div className="space-y-3">
