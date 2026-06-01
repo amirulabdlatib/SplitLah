@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\BillController;
 use App\Http\Controllers\Api\V1\PaymentController;
+use App\Http\Controllers\Api\V1\SettingsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,9 @@ Route::middleware(['throttle:600,1', 'auth:sanctum'])->group(function () {
             Route::delete('/bills/{bill_uuid}', [BillController::class, 'destroy']);
 
             Route::get('/bills/{bill_uuid}/attachment', [BillController::class, 'attachment']);
+
+            Route::get('/settings', [SettingsController::class, 'index']);
+            Route::patch('/settings', [SettingsController::class, 'update']);
         });
 
         Route::get('/payments/{token}', [PaymentController::class, 'index']);
