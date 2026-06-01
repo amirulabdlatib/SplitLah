@@ -114,7 +114,7 @@ class BillController extends Controller
                 'amount_owed' => $validated['split_type'] === 'equal'
                     ? $equalShare
                     : (float) $participant['amount_owed'],
-                'status'      => ParticipantStatus::PENDING->value,
+                'status'      => ParticipantStatus::UNPAID->value,
                 'created_at'  => now(),
                 'updated_at'  => now(),
             ])->toArray();
