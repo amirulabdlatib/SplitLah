@@ -2,7 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { CalendarDays, ChevronDown, Loader2, Plus, Receipt, Trash2, Upload, Users, X } from "lucide-react";
+import { ArrowLeft, CalendarDays, ChevronDown, Loader2, Plus, Receipt, Trash2, Upload, Users, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -48,6 +49,8 @@ export default function EditBillPage() {
     const [loading, setLoading] = useState(false);
     const [participants, setParticipants] = useState<Participant[]>(existingBill.participants);
 
+    const router = useRouter();
+
     const addParticipant = () => {
         setParticipants((prev) => [...prev, { id: Date.now(), name: "", email: "", phone: "", amount_owed: "", status: "unpaid" }]);
     };
@@ -81,6 +84,10 @@ export default function EditBillPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }} className="max-w-2xl mx-auto">
             {/* Page header */}
             <div className="mb-8">
+                <button type="button" onClick={() => router.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3">
+                    <ArrowLeft className="w-4 h-4" />
+                    Back
+                </button>
                 <h1 className="text-2xl font-bold text-foreground tracking-tight">Edit bill</h1>
                 <p className="text-sm text-muted-foreground mt-0.5">Update bill details and manage participants.</p>
             </div>
