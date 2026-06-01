@@ -67,6 +67,11 @@ class PaymentController extends Controller
         }
 
         if ($request->hasFile('receipt')) {
+
+            $request->validate([
+                'receipt' => 'file|mimes:jpg,jpeg,png|max:1024',
+            ]);
+
             $path = $request->file('receipt')->store('receipts', 'private');
             $participant->receipt_path = $path;
         }

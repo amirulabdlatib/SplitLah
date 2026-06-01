@@ -62,7 +62,7 @@ class BillController extends Controller
             'split_type'                 => 'required|in:equal,custom',
             'due_date'                   => 'required|date|after_or_equal:today',
             'auto_confirm'               => 'boolean',
-            'bill_file'                  => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'bill_file'                  => 'nullable|file|mimes:jpg,jpeg,png|max:1024',
             'participants'               => 'required|array|min:1',
             'participants.*.name'        => 'required|string|max:255',
             'participants.*.email'       => 'nullable|email|max:255|required_without:participants.*.phone',
