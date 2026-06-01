@@ -60,13 +60,22 @@ class PaymentController extends Controller
             ], Response::HTTP_NOT_FOUND);
         }
 
+        if ($participant->status === ParticipantStatus::PAID) {
+            return response()->json([
+                'message' => 'Payment already confirmed'
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         if ($request->hasFile('receipt')) {
             $path = $request->file('receipt')->store('receipts', 'private');
             $participant->receipt_path = $path;
         }
 
-        $participant->status = ParticipantStatus::PENDING;
-        $participant->save();
+        $participant->update([
+            'status' => ParticipantStatus::PENDING,
+            'paid_at' => now(),
+            'receipt_path' => $path ?? null,
+        ]);
 
         return response()->json([
             'message' => 'Payment submitted successfully',

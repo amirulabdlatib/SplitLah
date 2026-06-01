@@ -300,7 +300,7 @@ export default function PaymentPage({ params }: { params: Promise<{ token: strin
                             </motion.div>
 
                             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-xs text-muted-foreground pt-4">
-                                Split<span className="text-primary">Lah</span> — Split bills, not friendships.
+                                SplitLah — Split bills, not friendships.
                             </motion.p>
                         </motion.div>
                     )}
