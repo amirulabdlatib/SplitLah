@@ -187,7 +187,7 @@ export default function DashboardClientPage() {
                                                 </motion.button>
 
                                                 <Button asChild size="icon" variant="outline" className="h-8 w-8 rounded-lg border-border hover:bg-muted">
-                                                    <Link href={`/dashboard/bills/${bill.bill_uuid}`}>
+                                                    <Link href={`/bills/${bill.bill_uuid}`}>
                                                         <Eye className="w-3.5 h-3.5" />
                                                     </Link>
                                                 </Button>
