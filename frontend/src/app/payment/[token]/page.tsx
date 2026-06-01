@@ -281,7 +281,9 @@ export default function PaymentPage({ params }: { params: Promise<{ token: strin
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Status</span>
-                                    <span className="text-accent-foreground font-medium">Pending confirmation</span>
+                                    <span className={`font-medium ${current_participant.status === "paid" ? "text-accent-foreground" : current_participant.status === "pending" ? "text-yellow-600" : "text-muted-foreground"}`}>
+                                        {current_participant.status[0].toUpperCase() + current_participant.status.slice(1)}
+                                    </span>
                                 </div>
                             </motion.div>
 
