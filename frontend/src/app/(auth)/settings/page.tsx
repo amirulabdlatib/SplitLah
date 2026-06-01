@@ -3,6 +3,7 @@
 import { ImageDropzone } from "@/components/ImageDropzone";
 import { Button } from "@/components/ui/button";
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox";
+import { useAuthUser } from "@/stores/auth.selectors";
 import { motion } from "framer-motion";
 import { CreditCard, Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -15,6 +16,7 @@ export default function SettingsPage() {
     const [accNo, setAccNo] = useState("1234 5678 9012");
     const [qrFile, setQrFile] = useState<File | null>(null);
     const [paymentLoading, setPaymentLoading] = useState(false);
+    const user = useAuthUser();
 
     const handlePaymentSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -31,7 +33,7 @@ export default function SettingsPage() {
             {/* Page header */}
             <div className="mb-2">
                 <h1 className="text-2xl font-bold text-foreground tracking-tight">Settings</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">Manage your profile and payment details.</p>
+                <p className="text-sm text-muted-foreground mt-0.5">Manage your payment details.</p>
             </div>
             {/* Payment details card */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.4 }} className="bg-card border border-border rounded-2xl p-6">
@@ -89,7 +91,7 @@ export default function SettingsPage() {
                             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Preview — what members will see</p>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Pay to</span>
-                                <span className="font-medium text-foreground">Ahmad</span>
+                                <span className="font-medium text-foreground">{user?.name}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Bank</span>
