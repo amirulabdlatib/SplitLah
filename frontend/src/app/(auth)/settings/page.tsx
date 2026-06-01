@@ -1,9 +1,9 @@
 "use client";
 
+import { ImageDropzone } from "@/components/ImageDropzone";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Camera, CheckCircle, CreditCard, Loader2, Mail, QrCode, Trash2, User } from "lucide-react";
-import Image from "next/image";
+import { Camera, CreditCard, Loader2, Mail, Trash2, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -15,23 +15,8 @@ export default function SettingsPage() {
     const [bankName, setBankName] = useState("Maybank");
     const [accNo, setAccNo] = useState("1234 5678 9012");
     const [qrFile, setQrFile] = useState<File | null>(null);
-    const [qrPreview, setQrPreview] = useState<string | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
     const [paymentLoading, setPaymentLoading] = useState(false);
-
-    const handleQrUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setQrFile(file);
-        const reader = new FileReader();
-        reader.onload = () => setQrPreview(reader.result as string);
-        reader.readAsDataURL(file);
-    };
-
-    const removeQr = () => {
-        setQrFile(null);
-        setQrPreview(null);
-    };
 
     const handleProfileSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -58,7 +43,6 @@ export default function SettingsPage() {
                 <h1 className="text-2xl font-bold text-foreground tracking-tight">Settings</h1>
                 <p className="text-sm text-muted-foreground mt-0.5">Manage your profile and payment details.</p>
             </div>
-
             {/* Profile card */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4 }} className="bg-card border border-border rounded-2xl p-6">
                 <div className="flex items-center gap-2 mb-5">
@@ -122,7 +106,6 @@ export default function SettingsPage() {
                     </Button>
                 </form>
             </motion.div>
-
             {/* Payment details card */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.4 }} className="bg-card border border-border rounded-2xl p-6">
                 <div className="flex items-center gap-2 mb-2">
@@ -165,32 +148,13 @@ export default function SettingsPage() {
                         />
                     </div>
 
-                    {/* QR code upload */}
+                    {/* QR code */}
                     <div className="space-y-1.5">
                         <label className="text-sm font-medium text-foreground">
                             QR code
                             <span className="text-muted-foreground font-normal ml-1">(optional)</span>
                         </label>
-
-                        {qrPreview ? (
-                            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative w-fit">
-                                <Image src={qrPreview} alt="QR Preview" className="w-40 h-40 object-contain rounded-xl border border-border bg-muted/30 p-2" />
-                                <button type="button" onClick={removeQr} className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive flex items-center justify-center text-white hover:bg-destructive/90 transition-colors">
-                                    <Trash2 className="w-3 h-3" />
-                                </button>
-                                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                                    <CheckCircle className="w-3 h-3 text-primary" />
-                                    {qrFile?.name}
-                                </p>
-                            </motion.div>
-                        ) : (
-                            <label className="flex flex-col items-center justify-center w-full h-36 rounded-xl border-2 border-dashed border-border hover:border-primary/40 bg-muted/30 hover:bg-primary/5 cursor-pointer transition-all duration-200 group">
-                                <input type="file" accept="image/*" className="hidden" onChange={handleQrUpload} />
-                                <QrCode className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors mb-2" />
-                                <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">Upload your DuitNow or bank QR code</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">PNG, JPG up to 5MB</p>
-                            </label>
-                        )}
+                        <ImageDropzone value={qrFile} onChange={setQrFile} maxSizeMB={5} />
                     </div>
 
                     {/* Preview */}
@@ -224,8 +188,7 @@ export default function SettingsPage() {
                     </Button>
                 </form>
             </motion.div>
-
-            {/* Danger zone */}
+            Danger zone
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.4 }} className="bg-card border border-destructive/20 rounded-2xl p-6">
                 <h2 className="font-semibold text-foreground mb-1">Danger zone</h2>
                 <p className="text-sm text-muted-foreground mb-4">Permanently delete your account and all associated bills.</p>

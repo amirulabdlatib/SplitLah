@@ -160,6 +160,21 @@ class BillController extends Controller
         ]);
     }
 
+    public function attachment(string $bill_uuid)
+    {
+        $bill = Bill::where('bill_uuid', $bill_uuid)->firstOrFail();
+
+        if ($bill->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if (!$bill->bill_file_path) {
+            abort(404);
+        }
+
+        return Storage::disk('private')->response($bill->bill_file_path);
+    }
+
     public function destroy(String $bill_uuid)
     {
         $bill = Bill::where('bill_uuid', $bill_uuid)->first();

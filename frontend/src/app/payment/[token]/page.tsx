@@ -1,10 +1,11 @@
 "use client";
 
 import Loading from "@/app/loading";
+import { ImageDropzone } from "@/components/ImageDropzone";
 import { Button } from "@/components/ui/button";
 import { useConfirmPayment, usePayment } from "@/features/payments/hooks/usePayments";
 import { AnimatePresence, motion } from "framer-motion";
-import { CalendarDays, CheckCircle, Clock, Copy, CopyCheck, ShieldCheck, Upload, Users, Wallet, X } from "lucide-react";
+import { CalendarDays, CheckCircle, Clock, Copy, CopyCheck, ShieldCheck, Users, Wallet, X } from "lucide-react";
 import Image from "next/image";
 import { use, useState } from "react";
 import { toast } from "sonner";
@@ -225,22 +226,7 @@ export default function PaymentPage({ params }: { params: Promise<{ token: strin
 
                                 <p className="text-sm text-muted-foreground">Upload your payment screenshot or bank slip as proof. This is optional but recommended.</p>
 
-                                <label className="flex flex-col items-center justify-center w-full h-40 rounded-xl border-2 border-dashed border-border hover:border-primary/40 bg-muted/30 hover:bg-primary/5 cursor-pointer transition-all duration-200 group">
-                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => setReceipt(e.target.files?.[0] || null)} />
-                                    {receipt ? (
-                                        <div className="flex flex-col items-center gap-2 text-center px-4">
-                                            <CheckCircle className="w-8 h-8 text-primary" />
-                                            <p className="text-sm font-medium text-foreground truncate max-w-55">{receipt.name}</p>
-                                            <p className="text-xs text-muted-foreground">Tap to change</p>
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center gap-2 text-center px-4">
-                                            <Upload className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
-                                            <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">Tap to upload screenshot</p>
-                                            <p className="text-xs text-muted-foreground">JPG, PNG, JPEG 1MB</p>
-                                        </div>
-                                    )}
-                                </label>
+                                <ImageDropzone value={receipt} onChange={setReceipt} />
 
                                 <div className="flex gap-3">
                                     <Button variant="outline" className="flex-1 h-11 rounded-xl border-border font-medium" onClick={handleConfirm} disabled={isPending}>

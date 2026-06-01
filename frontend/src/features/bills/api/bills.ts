@@ -45,3 +45,8 @@ export const storeBill = async (payload: StoreBillPayload) => {
 export const deleteBills = async (bill_uuid: string) => {
     await api.delete(`/api/v1/bills/${bill_uuid}`);
 };
+
+export const getBillAttachment = async (bill_uuid: string) => {
+    const res = await api.get(`/api/v1/bills/${bill_uuid}/attachment`, { responseType: "blob" });
+    return URL.createObjectURL(res.data);
+};

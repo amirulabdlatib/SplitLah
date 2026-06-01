@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteBills, getBill, getBills, storeBill } from "../api/bills";
+import { deleteBills, getBill, getBillAttachment, getBills, storeBill } from "../api/bills";
 
 export const useBills = () => {
     return useQuery({
@@ -37,5 +37,14 @@ export const useDeleteBills = () => {
             queryClient.removeQueries({ queryKey: ["bills", bill_uuid] });
             queryClient.invalidateQueries({ queryKey: ["bills"] });
         },
+    });
+};
+
+export const useBillAttachment = (uuid: string, enabled: boolean) => {
+    return useQuery({
+        queryKey: ["bill-attachment", uuid],
+        queryFn: () => getBillAttachment(uuid),
+        enabled,
+        staleTime: Infinity,
     });
 };

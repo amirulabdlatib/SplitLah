@@ -3,11 +3,12 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useDeleteBills, useGetBill } from "@/features/bills/hooks/useBills";
+import { useBillAttachment, useDeleteBills, useGetBill } from "@/features/bills/hooks/useBills";
 import { motion } from "framer-motion";
-import { ArrowLeft, CalendarDays, CheckCircle, Clock, Copy, MessageCircle, Receipt, Trash2, Users, Wallet } from "lucide-react";
+import { ArrowLeft, CalendarDays, CheckCircle, Clock, Copy, MessageCircle, Receipt, Trash2, Users, Wallet, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 
 const statusConfig = {
@@ -21,6 +22,9 @@ export default function BillDetailPage() {
     const { data: bill, isLoading, isError } = useGetBill(uuid);
     const { mutate: deleteBill, isPending: isDeleting } = useDeleteBills();
     const router = useRouter();
+
+    const [receiptOpen, setReceiptOpen] = useState(false);
+    const { data: attachmentUrl, isLoading: attachmentLoading } = useBillAttachment(uuid, receiptOpen);
 
     if (isLoading) {
         return (
@@ -278,13 +282,36 @@ export default function BillDetailPage() {
                 </div>
 
                 {bill.bill_file_path ? (
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border">
-                        <Receipt className="w-5 h-5 text-primary" />
-                        <span className="text-sm text-foreground flex-1">Receipt {bill.title}</span>
-                        <Button variant="ghost" size="sm" className="text-primary h-8 px-3 text-xs">
-                            View
-                        </Button>
-                    </div>
+                    <>
+                        <div onClick={() => setReceiptOpen(true)} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border hover:bg-muted/70 transition-colors cursor-pointer">
+                            <Receipt className="w-5 h-5 text-primary" />
+                            <span className="text-sm text-foreground flex-1">Receipt {bill.title}</span>
+                            <span className="text-xs text-primary font-medium">View</span>
+                        </div>
+
+                        {/* Lightbox */}
+                        {receiptOpen && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setReceiptOpen(false)} className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+                                <button onClick={() => setReceiptOpen(false)} className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+
+                                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.2 }} onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
+                                    {attachmentLoading ? (
+                                        <div className="flex flex-col items-center gap-3 text-white">
+                                            <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <p className="text-sm text-white/70">Loading...</p>
+                                        </div>
+                                    ) : attachmentUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={attachmentUrl} alt={`Receipt for ${bill.title}`} className="max-w-full max-h-[85vh] rounded-xl object-contain" />
+                                    ) : (
+                                        <p className="text-white/70 text-sm">Failed to load image.</p>
+                                    )}
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </>
                 ) : (
                     <p className="text-sm text-muted-foreground">No attachment uploaded.</p>
                 )}
