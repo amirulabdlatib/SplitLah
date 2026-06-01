@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowLeft, Bell, CalendarDays, CheckCircle, Clock, Edit, Receipt, Trash2, Users, Wallet } from "lucide-react";
+import { ArrowLeft, CalendarDays, CheckCircle, Clock, Copy, Edit, MessageCircle, Receipt, Trash2, Users, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -21,10 +21,10 @@ const bill = {
     bill_file_path: null,
     created_at: "20 May 2025",
     participants: [
-        { id: 1, name: "Azlan", email: "azlan@email.com", phone: "0123456789", amount_owed: 30, status: "paid", paid_at: "21 May 2025" },
-        { id: 2, name: "Syira", email: "syira@email.com", phone: "0129876543", amount_owed: 30, status: "paid", paid_at: "22 May 2025" },
-        { id: 3, name: "Hafiz", email: "hafiz@email.com", phone: "0111234567", amount_owed: 30, status: "unpaid", paid_at: null },
-        { id: 4, name: "Danial", email: "danial@email.com", phone: "0167654321", amount_owed: 30, status: "unpaid", paid_at: null },
+        { id: 1, name: "Azlan", email: "azlan@email.com", phone: "60123456789", token: "token-azlan-123", amount_owed: 30, status: "paid", paid_at: "21 May 2025" },
+        { id: 2, name: "Syira", email: "syira@email.com", phone: "60129876543", token: "token-syira-456", amount_owed: 30, status: "paid", paid_at: "22 May 2025" },
+        { id: 3, name: "Hafiz", email: "hafiz@email.com", phone: "60111234567", token: "token-hafiz-789", amount_owed: 30, status: "unpaid", paid_at: null },
+        { id: 4, name: "Danial", email: "danial@email.com", phone: "60167654321", token: "token-danial-012", amount_owed: 30, status: "unpaid", paid_at: null },
     ],
 };
 
@@ -43,9 +43,9 @@ export default function BillDetailPage() {
     const paidCount = participants.filter((p) => p.status === "paid").length;
     const status = statusConfig[bill.status as keyof typeof statusConfig];
 
-    const remindAll = () => {
-        toast.success("Reminders sent!", { description: "Unpaid members have been notified." });
-    };
+    // const remindAll = () => {
+    //     toast.success("Reminders sent!", { description: "Unpaid members have been notified." });
+    // };
 
     const toggleStatus = (id: number) => {
         setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, status: p.status === "paid" ? "unpaid" : "paid", paid_at: p.status === "paid" ? null : "Now" } : p)));
@@ -139,54 +139,94 @@ export default function BillDetailPage() {
                     </div>
                 </div>
 
-                {/* Action buttons */}
-                <div className="pt-2 flex justify-end">
+                {/* Remind all button */}
+                {/* <div className="pt-2 flex justify-end">
                     <Button onClick={remindAll} size="sm" className="h-10 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground gap-2 text-sm font-medium transition-all">
                         <Bell className="w-3.5 h-3.5" />
                         Remind all
                     </Button>
-                </div>
+                </div> */}
             </motion.div>
 
             {/* Participants card */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.4 }} className="bg-card border border-border rounded-2xl p-6">
-                <div className="flex items-center gap-2 mb-5">
-                    <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-                        <Users className="w-4 h-4 text-accent-foreground" />
+                <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
+                            <Users className="w-4 h-4 text-accent-foreground" />
+                        </div>
+                        <h2 className="font-semibold text-foreground">Participants</h2>
                     </div>
-                    <h2 className="font-semibold text-foreground">Participants</h2>
+                    <span className="text-xs text-muted-foreground">
+                        {paidCount}/{participants.length} paid
+                    </span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2">
                     {participants.map((p, i) => (
                         <motion.div
                             key={p.id}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.25 + i * 0.07, duration: 0.35 }}
-                            className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border"
+                            className="flex items-center justify-between px-4 py-3 rounded-xl bg-muted/20 border border-border hover:bg-muted/30 transition-colors"
                         >
                             {/* Left */}
                             <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">{p.name[0]}</div>
+                                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary shrink-0">{p.name[0]}</div>
                                 <div>
-                                    <p className="text-sm font-medium text-foreground">{p.name}</p>
-                                    <p className="text-xs text-muted-foreground">{p.phone}</p>
+                                    <p className="text-sm font-medium text-foreground leading-tight">{p.name}</p>
+                                    {p.paid_at ? (
+                                        <p className="text-xs text-muted-foreground mt-0.5">Paid {p.paid_at}</p>
+                                    ) : (
+                                        <>
+                                            <p className="text-xs text-muted-foreground mt-0.5">{p.phone}</p>
+                                            <p className="text-xs text-muted-foreground">{p.email}</p>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
                             {/* Right */}
-                            <div className="flex items-center gap-3">
-                                <div className="text-right">
-                                    <p className="text-sm font-semibold text-foreground">RM {p.amount_owed}</p>
-                                    {p.paid_at && <p className="text-xs text-muted-foreground">{p.paid_at}</p>}
-                                </div>
+                            <div className="flex items-center gap-2">
+                                <p className="text-sm font-semibold text-foreground mr-1">RM {p.amount_owed}</p>
+
+                                {/* Copy link */}
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(`${window.location.origin}/payment/${p.token}`);
+                                        toast.success("Link copied!", { description: `Payment link for ${p.name} copied.` });
+                                    }}
+                                    className="w-8 h-8 rounded-lg border border-border bg-background hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
+                                >
+                                    <Copy className="w-3.5 h-3.5" />
+                                </motion.button>
+
+                                {/* WhatsApp */}
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => {
+                                        const link = `${window.location.origin}/payment/${p.token}`;
+                                        const msg = encodeURIComponent(`Hi ${p.name}, sila bayar RM ${p.amount_owed} melalui link ni: ${link}`);
+                                        window.open(`https://wa.me/${p.phone}?text=${msg}`, "_blank");
+                                    }}
+                                    className="w-8 h-8 rounded-lg border border-border bg-background hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
+                                >
+                                    <MessageCircle className="w-3.5 h-3.5" />
+                                </motion.button>
+
+                                {/* Status badge */}
                                 <motion.button
                                     whileHover={{ scale: 1.03 }}
                                     whileTap={{ scale: 0.97 }}
                                     onClick={() => toggleStatus(p.id)}
-                                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-200 ${
-                                        p.status === "paid" ? "bg-accent text-accent-foreground hover:bg-accent/80" : "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                                    className={`text-xs px-3.5 py-1.5 rounded-full font-medium transition-all duration-200 min-w-16 text-center ${
+                                        p.status === "paid"
+                                            ? "bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/20"
+                                            : "bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20"
                                     }`}
                                 >
                                     {p.status === "paid" ? "Paid" : "Unpaid"}
