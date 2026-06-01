@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { useConfirmPayment, usePayment } from "@/features/payments/hooks/usePayments";
 import { AnimatePresence, motion } from "framer-motion";
 import { CalendarDays, CheckCircle, Clock, Copy, CopyCheck, ShieldCheck, Users, Wallet, X } from "lucide-react";
-import Image from "next/image";
 import { use, useState } from "react";
 import { toast } from "sonner";
 
@@ -169,8 +168,10 @@ export default function PaymentPage({ params }: { params: Promise<{ token: strin
                                     </div>
 
                                     {bill.organiser.qr_file_path ? (
-                                        <div className="flex justify-center">
-                                            <Image src={bill.organiser.qr_file_path} alt="QR Code" className="w-40 h-40 rounded-xl object-cover" />
+                                        <div className="flex flex-col items-center gap-2">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={bill.organiser.qr_file_path} alt="QR Code" className="w-40 h-40 rounded-xl object-cover" />
+                                            <span className="text-xs text-muted-foreground">Scan to pay</span>
                                         </div>
                                     ) : (
                                         <div className="flex justify-center">

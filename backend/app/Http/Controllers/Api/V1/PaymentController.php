@@ -32,7 +32,9 @@ class PaymentController extends Controller
                     'name'            => $bill->user->name,
                     'bank_name'       => $bill->user->bank_name,
                     'payment_acc_no'  => $bill->user->payment_acc_no,
-                    'qr_file_path'    => $bill->user->qr_file_path,
+                    'qr_file_path' => $bill->user->qr_file_path
+                        ? asset('storage/' . $bill->user->qr_file_path)
+                        : null,
                 ],
             ],
             'current_participant' => [
