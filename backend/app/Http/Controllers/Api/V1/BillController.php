@@ -128,6 +128,38 @@ class BillController extends Controller
         );
     }
 
+    public function show(string $bill_uuid)
+    {
+        $bill = Bill::where('bill_uuid', $bill_uuid)
+            ->where('user_id', Auth::id())
+            ->with('participants')
+            ->firstOrFail();
+
+        return response()->json([
+            'id'             => $bill->id,
+            'uuid'           => $bill->bill_uuid,
+            'title'          => $bill->title,
+            'description'    => $bill->description,
+            'total_amount'   => $bill->total_amount,
+            'split_type'     => $bill->split_type,
+            'status'         => $bill->status,
+            'due_date'       => $bill->due_date ? $bill->due_date->format('d M Y') : null,
+            'auto_confirm'   => $bill->auto_confirm,
+            'bill_file_path' => $bill->bill_file_path,
+            'created_at'     => $bill->created_at->format('d M Y'),
+            'participants'   => $bill->participants->map(fn($participant) => [
+                'id'          => $participant->id,
+                'name'        => $participant->name,
+                'email'       => $participant->email,
+                'phone'       => $participant->phone,
+                'token'       => $participant->token,
+                'amount_owed' => $participant->amount_owed,
+                'status'      => $participant->status,
+                'paid_at'     => $participant->paid_at ? $participant->paid_at->format('d M Y') : null,
+            ]),
+        ]);
+    }
+
     public function destroy(String $bill_uuid)
     {
         $bill = Bill::where('bill_uuid', $bill_uuid)->first();

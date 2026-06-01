@@ -1,10 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteBills, getBills, storeBill } from "../api/bills";
+import { deleteBills, getBill, getBills, storeBill } from "../api/bills";
 
 export const useBills = () => {
     return useQuery({
         queryKey: ["bills"],
         queryFn: () => getBills(),
+    });
+};
+
+export const useGetBill = (bill_uuid: string) => {
+    return useQuery({
+        queryKey: ["bills", bill_uuid],
+        queryFn: () => getBill(bill_uuid),
+        enabled: !!bill_uuid,
     });
 };
 

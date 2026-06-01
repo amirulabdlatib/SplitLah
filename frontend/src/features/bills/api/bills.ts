@@ -7,6 +7,11 @@ export const getBills = async () => {
     return data.bills;
 };
 
+export const getBill = async (bill_uuid: string) => {
+    const { data } = await api.get(`/api/v1/bills/${bill_uuid}`);
+    return data;
+};
+
 export const storeBill = async (payload: StoreBillPayload) => {
     const formData = new FormData();
 

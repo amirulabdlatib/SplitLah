@@ -2,31 +2,12 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useGetBill } from "@/features/bills/hooks/useBills";
 import { motion } from "framer-motion";
-import { ArrowLeft, CalendarDays, CheckCircle, Clock, Copy, Edit, MessageCircle, Receipt, Trash2, Users, Wallet } from "lucide-react";
+import { ArrowLeft, CalendarDays, CheckCircle, Clock, Copy, MessageCircle, Receipt, Trash2, Users, Wallet } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useParams } from "next/navigation";
 import { toast } from "sonner";
-
-const bill = {
-    id: "1",
-    uuid: "test-uuid-123",
-    title: "Dinner @ Pelita",
-    description: "Group dinner for 4 people. Nasi kandar + drinks.",
-    total_amount: 120,
-    split_type: "equal",
-    status: "active",
-    due_date: "1 Jun 2025",
-    auto_confirm: false,
-    bill_file_path: null,
-    created_at: "20 May 2025",
-    participants: [
-        { id: 1, name: "Azlan", email: "azlan@email.com", phone: "60123456789", token: "token-azlan-123", amount_owed: 30, status: "paid", paid_at: "21 May 2025" },
-        { id: 2, name: "Syira", email: "syira@email.com", phone: "60129876543", token: "token-syira-456", amount_owed: 30, status: "paid", paid_at: "22 May 2025" },
-        { id: 3, name: "Hafiz", email: "hafiz@email.com", phone: "60111234567", token: "token-hafiz-789", amount_owed: 30, status: "unpaid", paid_at: null },
-        { id: 4, name: "Danial", email: "danial@email.com", phone: "60167654321", token: "token-danial-012", amount_owed: 30, status: "unpaid", paid_at: null },
-    ],
-};
 
 const statusConfig = {
     active: { label: "Active", class: "bg-primary/10 text-primary border-primary/20" },
@@ -35,22 +16,34 @@ const statusConfig = {
 };
 
 export default function BillDetailPage() {
-    const [participants, setParticipants] = useState(bill.participants);
+    const { uuid } = useParams<{ uuid: string }>();
+    const { data: bill, isLoading, isError } = useGetBill(uuid);
 
-    const collected = participants.filter((p) => p.status === "paid").reduce((sum, p) => sum + p.amount_owed, 0);
+    if (isLoading) {
+        return (
+            <div className="max-w-2xl mx-auto pt-20 flex justify-center">
+                <p className="text-muted-foreground text-sm animate-pulse">Loading bill...</p>
+            </div>
+        );
+    }
 
-    const percent = Math.round((collected / bill.total_amount) * 100);
-    const paidCount = participants.filter((p) => p.status === "paid").length;
+    if (isError || !bill) {
+        return (
+            <div className="max-w-2xl mx-auto pt-20 flex justify-center">
+                <p className="text-destructive text-sm">Bill not found.</p>
+            </div>
+        );
+    }
+
+    const participants = bill.participants ?? [];
+    const collected = participants.filter((p: any) => p.status === "paid").reduce((sum: number, p: any) => sum + Number(p.amount_owed), 0);
+    const percent = Math.round((collected / Number(bill.total_amount)) * 100);
+    const paidCount = participants.filter((p: any) => p.status === "paid").length;
     const status = statusConfig[bill.status as keyof typeof statusConfig];
 
     // const remindAll = () => {
     //     toast.success("Reminders sent!", { description: "Unpaid members have been notified." });
     // };
-
-    const toggleStatus = (id: number) => {
-        setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, status: p.status === "paid" ? "unpaid" : "paid", paid_at: p.status === "paid" ? null : "Now" } : p)));
-        toast.success("Payment status updated.");
-    };
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }} className="max-w-2xl mx-auto space-y-6 pb-10">
@@ -63,12 +56,12 @@ export default function BillDetailPage() {
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
-                    <Button asChild variant="outline" size="sm" className="gap-1.5 rounded-lg border-border text-sm">
+                    {/* <Button asChild variant="outline" size="sm" className="gap-1.5 rounded-lg border-border text-sm">
                         <Link href={`/bills/${bill.uuid}/edit`}>
                             <Edit className="w-3.5 h-3.5" />
                             Edit
                         </Link>
-                    </Button>
+                    </Button> */}
                     <Button variant="outline" size="sm" className="gap-1.5 rounded-lg border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive text-sm">
                         <Trash2 className="w-3.5 h-3.5" />
                         Delete
@@ -87,9 +80,11 @@ export default function BillDetailPage() {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h1 className="text-lg font-bold text-foreground">{bill.title}</h1>
-                                <Badge variant="outline" className={`text-xs ${status.class}`}>
-                                    {status.label}
-                                </Badge>
+                                {status && (
+                                    <Badge variant="outline" className={`text-xs ${status.class}`}>
+                                        {status.label}
+                                    </Badge>
+                                )}
                             </div>
                             {bill.description && <p className="text-sm text-muted-foreground mt-0.5">{bill.description}</p>}
                         </div>
@@ -102,10 +97,12 @@ export default function BillDetailPage() {
 
                 {/* Meta info */}
                 <div className="flex flex-wrap gap-4 text-xs text-muted-foreground mb-5">
-                    <span className="flex items-center gap-1.5">
-                        <CalendarDays className="w-3.5 h-3.5" />
-                        Due {bill.due_date}
-                    </span>
+                    {bill.due_date && (
+                        <span className="flex items-center gap-1.5">
+                            <CalendarDays className="w-3.5 h-3.5" />
+                            Due {bill.due_date}
+                        </span>
+                    )}
                     <span className="flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5" />
                         Created {bill.created_at}
@@ -135,7 +132,7 @@ export default function BillDetailPage() {
                         <span>
                             {paidCount} of {participants.length} paid
                         </span>
-                        <span>RM {bill.total_amount - collected} remaining</span>
+                        <span>RM {Number(bill.total_amount) - collected} remaining</span>
                     </div>
                 </div>
 
@@ -163,7 +160,7 @@ export default function BillDetailPage() {
                 </div>
 
                 <div className="space-y-2">
-                    {participants.map((p, i) => (
+                    {participants.map((p: any, i: number) => (
                         <motion.div
                             key={p.id}
                             initial={{ opacity: 0, x: -10 }}
@@ -197,7 +194,9 @@ export default function BillDetailPage() {
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => {
                                         navigator.clipboard.writeText(`${window.location.origin}/payment/${p.token}`);
-                                        toast.success("Link copied!", { description: `Payment link for ${p.name} copied.` });
+                                        toast.success("Link copied!", {
+                                            description: `Payment link for ${p.name} copied.`,
+                                        });
                                     }}
                                     className="w-8 h-8 rounded-lg border border-border bg-background hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
                                 >
@@ -218,19 +217,18 @@ export default function BillDetailPage() {
                                     <MessageCircle className="w-3.5 h-3.5" />
                                 </motion.button>
 
-                                {/* Status badge */}
-                                <motion.button
-                                    whileHover={{ scale: 1.03 }}
-                                    whileTap={{ scale: 0.97 }}
-                                    onClick={() => toggleStatus(p.id)}
-                                    className={`text-xs px-3.5 py-1.5 rounded-full font-medium transition-all duration-200 min-w-16 text-center ${
+                                {/* Status badge — display only, no toggle yet */}
+                                <span
+                                    className={`text-xs px-3.5 py-1.5 rounded-full font-medium min-w-16 text-center border ${
                                         p.status === "paid"
-                                            ? "bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/20"
-                                            : "bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20"
+                                            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20"
+                                            : p.status === "pending"
+                                              ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/20"
+                                              : "bg-destructive/10 text-destructive border-destructive/20"
                                     }`}
                                 >
-                                    {p.status === "paid" ? "Paid" : "Unpaid"}
-                                </motion.button>
+                                    {p.status === "paid" ? "Paid" : p.status === "pending" ? "Pending" : "Unpaid"}
+                                </span>
                             </div>
                         </motion.div>
                     ))}
