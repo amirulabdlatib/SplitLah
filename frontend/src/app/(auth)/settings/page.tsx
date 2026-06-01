@@ -2,6 +2,7 @@
 
 import { ImageDropzone } from "@/components/ImageDropzone";
 import { Button } from "@/components/ui/button";
+import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox";
 import { motion } from "framer-motion";
 import { CreditCard, Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -46,20 +47,19 @@ export default function SettingsPage() {
                     {/* Bank name */}
                     <div className="space-y-1.5">
                         <label className="text-sm font-medium text-foreground">Bank / e-wallet</label>
-                        <div className="relative">
-                            <select
-                                value={bankName}
-                                onChange={(e) => setBankName(e.target.value)}
-                                className="w-full h-11 pl-4 pr-10 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200 appearance-none cursor-pointer"
-                            >
-                                {banks.map((b) => (
-                                    <option key={b} value={b}>
-                                        {b}
-                                    </option>
-                                ))}
-                            </select>
-                            <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                        </div>
+                        <Combobox items={banks} value={bankName} onValueChange={(val) => setBankName(val ?? "")}>
+                            <ComboboxInput placeholder="Select bank or e-wallet..." />
+                            <ComboboxContent>
+                                <ComboboxEmpty>No results found.</ComboboxEmpty>
+                                <ComboboxList>
+                                    {(item) => (
+                                        <ComboboxItem key={item} value={item}>
+                                            {item}
+                                        </ComboboxItem>
+                                    )}
+                                </ComboboxList>
+                            </ComboboxContent>
+                        </Combobox>
                     </div>
 
                     {/* Account number */}
@@ -70,7 +70,7 @@ export default function SettingsPage() {
                             placeholder="e.g. 1234 5678 9012"
                             value={accNo}
                             onChange={(e) => setAccNo(e.target.value)}
-                            className="w-full h-11 px-4 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200"
+                            className="w-full h-11 px-4 rounded-lg border border-input bg-muted text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-200"
                         />
                     </div>
 
@@ -89,7 +89,7 @@ export default function SettingsPage() {
                             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Preview — what members will see</p>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Pay to</span>
-                                <span className="font-medium text-foreground">{name}</span>
+                                <span className="font-medium text-foreground">Ahmad</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Bank</span>
