@@ -13,7 +13,6 @@ import { toast } from "sonner";
 
 export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
-    const [googleLoading, setGoogleLoading] = useState(false);
 
     const loginAction = useAuthStore((state) => state.login);
     const errors = useAuthErrors();
