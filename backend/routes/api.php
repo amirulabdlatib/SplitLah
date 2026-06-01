@@ -25,6 +25,9 @@ Route::middleware(['throttle:600,1', 'auth:sanctum'])->group(function () {
             Route::post('/bills', [BillController::class, 'store']);
             Route::delete('/bills/{bill_uuid}', [BillController::class, 'destroy']);
 
+            Route::patch('/participants/{participant}/toggle', [BillController::class, 'toggleParticipantStatus'])
+                ->name('bills.participants.toggle');
+
             Route::get('/bills/{bill_uuid}/attachment', [BillController::class, 'attachment']);
 
             Route::get('/settings', [SettingsController::class, 'index']);

@@ -222,4 +222,24 @@ class BillController extends Controller
             ], 500);
         }
     }
+
+    public function toggleParticipantStatus(Request $request, Participant $participant)
+    {
+        $request->validate([
+            'status' => ['required', 'in:paid,pending,unpaid'],
+        ]);
+
+        $participant->update([
+            'status' => $request->status,
+            'paid_at' => $request->status == ParticipantStatus::PAID->value ? now() : null,
+        ]);
+
+        return response()->json([
+            'message' => 'Status updated successfully.',
+            'data'    => [
+                'uuid'   => $participant->uuid,
+                'status' => $participant->status,
+            ],
+        ]);
+    }
 }

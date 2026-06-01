@@ -1,6 +1,11 @@
 import api from "@/lib/axios";
 import { StoreBillPayload } from "@/types/bills";
 
+type ToggleParticipantStatusRequest = {
+    participant_id: number;
+    status: string;
+};
+
 export const getBills = async () => {
     const { data } = await api.get("/api/v1/bills");
 
@@ -49,4 +54,9 @@ export const deleteBills = async (bill_uuid: string) => {
 export const getBillAttachment = async (bill_uuid: string) => {
     const res = await api.get(`/api/v1/bills/${bill_uuid}/attachment`, { responseType: "blob" });
     return URL.createObjectURL(res.data);
+};
+
+export const toggleParticipantStatus = async ({ participant_id, status }: ToggleParticipantStatusRequest) => {
+    const { data } = await api.patch(`/api/v1/participants/${participant_id}/toggle`, { status });
+    return data;
 };

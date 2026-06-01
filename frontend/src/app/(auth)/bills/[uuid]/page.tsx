@@ -4,9 +4,10 @@ import Loading from "@/app/loading";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useBillAttachment, useDeleteBills, useGetBill } from "@/features/bills/hooks/useBills";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useBillAttachment, useDeleteBills, useGetBill, useToggleParticipantStatus } from "@/features/bills/hooks/useBills";
 import { motion } from "framer-motion";
-import { ArrowLeft, CalendarDays, CheckCircle, Clock, Copy, MessageCircle, Receipt, Trash2, Users, Wallet, X } from "lucide-react";
+import { ArrowLeft, CalendarDays, CheckCircle, ChevronDown, Clock, Copy, MessageCircle, Receipt, Trash2, Users, Wallet, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -23,6 +24,8 @@ export default function BillDetailPage() {
     const { data: bill, isLoading, isError } = useGetBill(uuid);
     const { mutate: deleteBill, isPending: isDeleting } = useDeleteBills();
     const router = useRouter();
+
+    const { mutate: toggleStatus, isPending: isToggling } = useToggleParticipantStatus();
 
     const [receiptOpen, setReceiptOpen] = useState(false);
     const { data: attachmentUrl, isLoading: attachmentLoading } = useBillAttachment(uuid, receiptOpen);
@@ -251,18 +254,34 @@ export default function BillDetailPage() {
                                     <MessageCircle className="w-3.5 h-3.5" />
                                 </motion.button>
 
-                                {/* Status badge — display only, no toggle yet */}
-                                <span
-                                    className={`text-xs px-3.5 py-1.5 rounded-full font-medium min-w-16 text-center border ${
-                                        p.status === "paid"
-                                            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20"
-                                            : p.status === "pending"
-                                              ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/20"
-                                              : "bg-destructive/10 text-destructive border-destructive/20"
-                                    }`}
-                                >
-                                    {p.status === "paid" ? "Paid" : p.status === "pending" ? "Pending" : "Unpaid"}
-                                </span>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <button
+                                            disabled={isToggling}
+                                            className={`text-xs px-3 py-1.5 rounded-full font-medium min-w-16 text-center border flex items-center gap-1 transition-opacity ${isToggling ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${
+                                                p.status === "paid"
+                                                    ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20"
+                                                    : p.status === "pending"
+                                                      ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/20"
+                                                      : "bg-destructive/10 text-destructive border-destructive/20"
+                                            }`}
+                                        >
+                                            {p.status === "paid" ? "Paid" : p.status === "pending" ? "Pending" : "Unpaid"}
+                                            <ChevronDown className="w-3 h-3" />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-32">
+                                        <DropdownMenuItem onClick={() => toggleStatus({ bill_uuid: uuid, participant_id: p.id, status: "unpaid" })} className="text-destructive focus:text-destructive">
+                                            Unpaid
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => toggleStatus({ bill_uuid: uuid, participant_id: p.id, status: "pending" })} className="text-yellow-400 focus:text-yellow-400">
+                                            Pending
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => toggleStatus({ bill_uuid: uuid, participant_id: p.id, status: "paid" })} className="text-emerald-400 focus:text-emerald-400">
+                                            Paid
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         </motion.div>
                     ))}

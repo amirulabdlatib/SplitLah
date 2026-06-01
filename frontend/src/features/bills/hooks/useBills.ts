@@ -1,5 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteBills, getBill, getBillAttachment, getBills, storeBill } from "../api/bills";
+import { deleteBills, getBill, getBillAttachment, getBills, storeBill, toggleParticipantStatus } from "../api/bills";
+
+type ToggleParticipantStatusPayload = {
+    bill_uuid: string;
+    participant_id: number;
+    status: string;
+};
 
 export const useBills = () => {
     return useQuery({
@@ -46,5 +52,16 @@ export const useBillAttachment = (uuid: string, enabled: boolean) => {
         queryFn: () => getBillAttachment(uuid),
         enabled,
         staleTime: Infinity,
+    });
+};
+
+export const useToggleParticipantStatus = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ participant_id, status }: ToggleParticipantStatusPayload) => toggleParticipantStatus({ participant_id, status }),
+        onSuccess: (_, { bill_uuid }) => {
+            queryClient.invalidateQueries({ queryKey: ["bills", bill_uuid] });
+        },
     });
 };
