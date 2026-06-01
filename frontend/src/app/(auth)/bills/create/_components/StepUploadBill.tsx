@@ -26,10 +26,10 @@ export function StepUploadBill({ billFile, setBillFile, errors, nextStep }: Step
                     <h2 className="font-semibold text-foreground">Upload Bill</h2>
                 </div>
 
-                <p className="text-sm text-muted-foreground">Upload a photo or PDF of your bill. This is optional — you can skip this step.</p>
+                <p className="text-sm text-muted-foreground">Upload a photo of your bill. This is optional — you can skip this step.</p>
 
                 <label className="flex flex-col items-center justify-center w-full h-48 rounded-xl border-2 border-dashed border-border hover:border-primary/40 bg-muted/30 hover:bg-primary/5 cursor-pointer transition-all duration-200 group">
-                    <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => setBillFile(e.target.files?.[0] || null)} />
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => setBillFile(e.target.files?.[0] || null)} />
                     {billFile ? (
                         <div className="flex flex-col items-center gap-3">
                             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -58,7 +58,7 @@ export function StepUploadBill({ billFile, setBillFile, errors, nextStep }: Step
                             </div>
                             <div className="text-center">
                                 <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Click to upload</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">JPG, PNG or PDF — max 5MB</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">JPG, PNG or JPEG — max 1MB</p>
                             </div>
                         </div>
                     )}

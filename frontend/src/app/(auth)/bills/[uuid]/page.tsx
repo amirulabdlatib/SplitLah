@@ -280,7 +280,7 @@ export default function BillDetailPage() {
                 {bill.bill_file_path ? (
                     <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border">
                         <Receipt className="w-5 h-5 text-primary" />
-                        <span className="text-sm text-foreground flex-1">bill-receipt.pdf</span>
+                        <span className="text-sm text-foreground flex-1">Receipt {bill.title}</span>
                         <Button variant="ghost" size="sm" className="text-primary h-8 px-3 text-xs">
                             View
                         </Button>

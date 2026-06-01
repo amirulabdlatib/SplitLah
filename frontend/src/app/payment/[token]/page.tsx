@@ -226,7 +226,7 @@ export default function PaymentPage({ params }: { params: Promise<{ token: strin
                                 <p className="text-sm text-muted-foreground">Upload your payment screenshot or bank slip as proof. This is optional but recommended.</p>
 
                                 <label className="flex flex-col items-center justify-center w-full h-40 rounded-xl border-2 border-dashed border-border hover:border-primary/40 bg-muted/30 hover:bg-primary/5 cursor-pointer transition-all duration-200 group">
-                                    <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => setReceipt(e.target.files?.[0] || null)} />
+                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => setReceipt(e.target.files?.[0] || null)} />
                                     {receipt ? (
                                         <div className="flex flex-col items-center gap-2 text-center px-4">
                                             <CheckCircle className="w-8 h-8 text-primary" />
@@ -236,8 +236,8 @@ export default function PaymentPage({ params }: { params: Promise<{ token: strin
                                     ) : (
                                         <div className="flex flex-col items-center gap-2 text-center px-4">
                                             <Upload className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
-                                            <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">Tap to upload screenshot or PDF</p>
-                                            <p className="text-xs text-muted-foreground">JPG, PNG, PDF up to 10MB</p>
+                                            <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">Tap to upload screenshot</p>
+                                            <p className="text-xs text-muted-foreground">JPG, PNG, JPEG 1MB</p>
                                         </div>
                                     )}
                                 </label>

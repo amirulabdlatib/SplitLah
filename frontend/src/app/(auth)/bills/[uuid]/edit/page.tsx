@@ -212,7 +212,7 @@ export default function EditBillPage() {
                             <span className="text-muted-foreground font-normal ml-1">(optional)</span>
                         </label>
                         <label className="flex flex-col items-center justify-center w-full h-28 rounded-xl border-2 border-dashed border-border hover:border-primary/40 bg-muted/30 hover:bg-primary/5 cursor-pointer transition-all duration-200 group">
-                            <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => setBillFile(e.target.files?.[0] || null)} />
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => setBillFile(e.target.files?.[0] || null)} />
                             {billFile ? (
                                 <div className="flex items-center gap-2 text-sm text-foreground">
                                     <Receipt className="w-4 h-4 text-primary" />
