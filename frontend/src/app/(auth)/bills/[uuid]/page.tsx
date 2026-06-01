@@ -1,5 +1,6 @@
 "use client";
 
+import Loading from "@/app/loading";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,11 +28,7 @@ export default function BillDetailPage() {
     const { data: attachmentUrl, isLoading: attachmentLoading } = useBillAttachment(uuid, receiptOpen);
 
     if (isLoading) {
-        return (
-            <div className="max-w-2xl mx-auto pt-20 flex justify-center">
-                <p className="text-muted-foreground text-sm animate-pulse">Loading bill...</p>
-            </div>
-        );
+        return <Loading />;
     }
 
     if (isError || !bill) {
