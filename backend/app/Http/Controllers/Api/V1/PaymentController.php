@@ -72,7 +72,7 @@ class PaymentController extends Controller
         }
 
         $participant->update([
-            'status' => ParticipantStatus::PENDING,
+            'status'  => $participant->bill->auto_confirm ? ParticipantStatus::PAID : ParticipantStatus::PENDING,
             'paid_at' => now(),
             'receipt_path' => $path ?? null,
         ]);
