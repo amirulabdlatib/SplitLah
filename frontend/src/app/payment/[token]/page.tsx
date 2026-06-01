@@ -1,50 +1,45 @@
 "use client";
 
+import Loading from "@/app/loading";
 import { Button } from "@/components/ui/button";
+import { usePayment } from "@/features/payments/hooks/usePayments";
 import { AnimatePresence, motion } from "framer-motion";
 import { CalendarDays, CheckCircle, Clock, ShieldCheck, Upload, Users, Wallet, X } from "lucide-react";
-import { useState } from "react";
+import Image from "next/image";
+import { use, useState } from "react";
 import { toast } from "sonner";
-
-const bill = {
-    uuid: "test-uuid-123",
-    title: "Dinner @ Pelita",
-    description: "Group dinner for 4 people. Nasi kandar + drinks.",
-    total_amount: 120,
-    due_date: "1 Jun 2025",
-    split_type: "equal",
-    auto_confirm: false,
-    organiser: {
-        name: "Ahmad Amirul",
-        payment_acc_no: "Maybank 1234 5678 9012",
-        qr_file_path: null,
-    },
-    participants: [
-        { id: 1, name: "Azlan", amount_owed: 30, status: "paid" },
-        { id: 2, name: "Syira", amount_owed: 30, status: "paid" },
-        { id: 3, name: "Hafiz", amount_owed: 30, status: "unpaid" },
-        { id: 4, name: "Danial", amount_owed: 30, status: "unpaid" },
-    ],
-    // Current participant viewing this link
-    current_participant: {
-        id: 3,
-        name: "Hafiz",
-        amount_owed: 30,
-        status: "unpaid",
-    },
-};
 
 type Step = "view" | "upload" | "success";
 
-export default function PayPage() {
+export default function PaymentPage({ params }: { params: Promise<{ token: string }> }) {
+    const { token } = use(params);
+    const { data, isLoading, isError } = usePayment(token);
+
     const [step, setStep] = useState<Step>("view");
     const [receipt, setReceipt] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
 
-    const collected = bill.participants.filter((p) => p.status === "paid").reduce((sum, p) => sum + p.amount_owed, 0);
+    if (isLoading) {
+        return <Loading />;
+    }
+
+    if (isError || !data) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center space-y-2">
+                    <p className="font-semibold text-foreground">Payment link not found</p>
+                    <p className="text-sm text-muted-foreground">This link may be invalid or expired.</p>
+                </div>
+            </div>
+        );
+    }
+
+    const { bill, current_participant, participants } = data;
+
+    const collected = participants.filter((p: any) => p.status === "paid").reduce((sum: number, p: any) => sum + p.amount_owed, 0);
     const percent = Math.round((collected / bill.total_amount) * 100);
-    const paidCount = bill.participants.filter((p) => p.status === "paid").length;
-    const isPaid = bill.current_participant.status === "paid";
+    const paidCount = participants.filter((p: any) => p.status === "paid").length;
+    const isPaid = current_participant.status === "paid";
 
     const handleConfirm = async () => {
         setLoading(true);
@@ -58,7 +53,6 @@ export default function PayPage() {
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
-            {/* Minimal navbar */}
             <header className="border-b border-border bg-background/80 backdrop-blur-md">
                 <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -78,10 +72,8 @@ export default function PayPage() {
 
             <main className="flex-1 max-w-lg mx-auto w-full px-4 py-8 space-y-4">
                 <AnimatePresence mode="wait">
-                    {/* Step: view */}
                     {step === "view" && (
                         <motion.div key="view" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="space-y-4">
-                            {/* Bill info card */}
                             <div className="bg-card border border-border rounded-2xl p-6">
                                 <div className="flex items-start justify-between mb-4">
                                     <div>
@@ -90,12 +82,11 @@ export default function PayPage() {
                                         {bill.description && <p className="text-sm text-muted-foreground mt-1">{bill.description}</p>}
                                     </div>
                                     <div className="text-right shrink-0 ml-4">
-                                        <p className="text-2xl font-bold text-foreground">RM {bill.current_participant.amount_owed}</p>
+                                        <p className="text-2xl font-bold text-foreground">RM {current_participant.amount_owed}</p>
                                         <p className="text-xs text-muted-foreground">your share</p>
                                     </div>
                                 </div>
 
-                                {/* Meta */}
                                 <div className="flex gap-4 text-xs text-muted-foreground mb-5">
                                     <span className="flex items-center gap-1">
                                         <CalendarDays className="w-3.5 h-3.5" />
@@ -103,7 +94,7 @@ export default function PayPage() {
                                     </span>
                                     <span className="flex items-center gap-1">
                                         <Users className="w-3.5 h-3.5" />
-                                        {bill.participants.length} people
+                                        {participants.length} people
                                     </span>
                                     <span className="flex items-center gap-1">
                                         <Clock className="w-3.5 h-3.5" />
@@ -111,7 +102,6 @@ export default function PayPage() {
                                     </span>
                                 </div>
 
-                                {/* Progress */}
                                 <div className="mb-2">
                                     <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
                                         <span>Group progress</span>
@@ -122,22 +112,20 @@ export default function PayPage() {
                                     </div>
                                 </div>
 
-                                {/* Participant pills */}
                                 <div className="flex flex-wrap gap-2 mt-4">
-                                    {bill.participants.map((p) => (
+                                    {participants.map((p: any) => (
                                         <span
                                             key={p.id}
                                             className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                                                p.status === "paid" ? "bg-accent text-accent-foreground" : p.id === bill.current_participant.id ? "bg-primary/10 text-primary border border-primary/30" : "bg-muted text-muted-foreground"
+                                                p.status === "paid" ? "bg-accent text-accent-foreground" : p.id === current_participant.id ? "bg-primary/10 text-primary border border-primary/30" : "bg-muted text-muted-foreground"
                                             }`}
                                         >
-                                            {p.name} {p.status === "paid" ? "✓" : p.id === bill.current_participant.id ? "(you)" : ""}
+                                            {p.name} {p.status === "paid" ? "✓" : p.id === current_participant.id ? "(you)" : ""}
                                         </span>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* Payment info card */}
                             {!isPaid && (
                                 <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.4 }} className="bg-card border border-border rounded-2xl p-6 space-y-4">
                                     <h2 className="font-semibold text-foreground">Payment details</h2>
@@ -153,16 +141,13 @@ export default function PayPage() {
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">Amount</span>
-                                            <span className="font-bold text-foreground text-base">RM {bill.current_participant.amount_owed}</span>
+                                            <span className="font-bold text-foreground text-base">RM {current_participant.amount_owed}</span>
                                         </div>
                                     </div>
 
-                                    {/* QR placeholder */}
                                     {bill.organiser.qr_file_path ? (
                                         <div className="flex justify-center">
-                                            <div className="w-40 h-40 rounded-xl bg-muted flex items-center justify-center">
-                                                <span className="text-xs text-muted-foreground">QR Code</span>
-                                            </div>
+                                            <Image src={bill.organiser.qr_file_path} alt="QR Code" className="w-40 h-40 rounded-xl object-cover" />
                                         </div>
                                     ) : (
                                         <div className="flex justify-center">
@@ -182,7 +167,6 @@ export default function PayPage() {
                                 </motion.div>
                             )}
 
-                            {/* Already paid state */}
                             {isPaid && (
                                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-accent/30 border border-accent/40 rounded-2xl p-6 flex flex-col items-center text-center gap-3">
                                     <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center">
@@ -195,7 +179,6 @@ export default function PayPage() {
                         </motion.div>
                     )}
 
-                    {/* Step: upload receipt */}
                     {step === "upload" && (
                         <motion.div key="upload" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="space-y-4">
                             <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
@@ -208,7 +191,6 @@ export default function PayPage() {
 
                                 <p className="text-sm text-muted-foreground">Upload your payment screenshot or bank slip as proof. This is optional but recommended.</p>
 
-                                {/* Upload zone */}
                                 <label className="flex flex-col items-center justify-center w-full h-40 rounded-xl border-2 border-dashed border-border hover:border-primary/40 bg-muted/30 hover:bg-primary/5 cursor-pointer transition-all duration-200 group">
                                     <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => setReceipt(e.target.files?.[0] || null)} />
                                     {receipt ? (
@@ -249,7 +231,6 @@ export default function PayPage() {
                         </motion.div>
                     )}
 
-                    {/* Step: success */}
                     {step === "success" && (
                         <motion.div
                             key="success"
@@ -265,8 +246,7 @@ export default function PayPage() {
                             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.4 }}>
                                 <h2 className="text-2xl font-bold text-foreground mb-2">Payment confirmed!</h2>
                                 <p className="text-muted-foreground text-sm max-w-xs">
-                                    Thanks {bill.current_participant.name}! Your payment of <span className="font-semibold text-foreground">RM {bill.current_participant.amount_owed}</span> has been submitted. The organiser will verify and
-                                    confirm it.
+                                    Thanks {current_participant.name}! Your payment of <span className="font-semibold text-foreground">RM {current_participant.amount_owed}</span> has been submitted. The organiser will verify and confirm it.
                                 </p>
                             </motion.div>
 
@@ -277,7 +257,7 @@ export default function PayPage() {
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Amount</span>
-                                    <span className="font-bold text-foreground">RM {bill.current_participant.amount_owed}</span>
+                                    <span className="font-bold text-foreground">RM {current_participant.amount_owed}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Status</span>

@@ -4,7 +4,6 @@ import { StoreBillPayload } from "@/types/bills";
 export const getBills = async () => {
     const { data } = await api.get("/api/v1/bills");
 
-    console.log(data.bills);
     return data.bills;
 };
 
