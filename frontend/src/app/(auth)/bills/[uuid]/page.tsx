@@ -1,32 +1,17 @@
 "use client";
 
+import Loading from "@/app/loading";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useBillAttachment, useDeleteBills, useGetBill, useToggleParticipantStatus } from "@/features/bills/hooks/useBills";
 import { motion } from "framer-motion";
-import { ArrowLeft, Bell, CalendarDays, CheckCircle, Clock, Copy, Edit, ExternalLink, Receipt, Trash2, Users, Wallet } from "lucide-react";
+import { ArrowLeft, CalendarDays, CheckCircle, ChevronDown, Clock, Copy, MessageCircle, Receipt, Trash2, Users, Wallet, X } from "lucide-react";
 import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-
-const bill = {
-    id: "1",
-    uuid: "test-uuid-123",
-    title: "Dinner @ Pelita",
-    description: "Group dinner for 4 people. Nasi kandar + drinks.",
-    total_amount: 120,
-    split_type: "equal",
-    status: "active",
-    due_date: "1 Jun 2025",
-    auto_confirm: false,
-    bill_file_path: null,
-    created_at: "20 May 2025",
-    participants: [
-        { id: 1, name: "Azlan", email: "azlan@email.com", phone: "0123456789", amount_owed: 30, status: "paid", paid_at: "21 May 2025" },
-        { id: 2, name: "Syira", email: "syira@email.com", phone: "0129876543", amount_owed: 30, status: "paid", paid_at: "22 May 2025" },
-        { id: 3, name: "Hafiz", email: "hafiz@email.com", phone: "0111234567", amount_owed: 30, status: "unpaid", paid_at: null },
-        { id: 4, name: "Danial", email: "danial@email.com", phone: "0167654321", amount_owed: 30, status: "unpaid", paid_at: null },
-    ],
-};
 
 const statusConfig = {
     active: { label: "Active", class: "bg-primary/10 text-primary border-primary/20" },
@@ -35,27 +20,37 @@ const statusConfig = {
 };
 
 export default function BillDetailPage() {
-    const [participants, setParticipants] = useState(bill.participants);
+    const { uuid } = useParams<{ uuid: string }>();
+    const { data: bill, isLoading, isError } = useGetBill(uuid);
+    const { mutate: deleteBill, isPending: isDeleting } = useDeleteBills();
+    const router = useRouter();
 
-    const collected = participants.filter((p) => p.status === "paid").reduce((sum, p) => sum + p.amount_owed, 0);
+    const { mutate: toggleStatus, isPending: isToggling } = useToggleParticipantStatus();
 
-    const percent = Math.round((collected / bill.total_amount) * 100);
-    const paidCount = participants.filter((p) => p.status === "paid").length;
+    const [receiptOpen, setReceiptOpen] = useState(false);
+    const { data: attachmentUrl, isLoading: attachmentLoading } = useBillAttachment(uuid, receiptOpen);
+
+    if (isLoading) {
+        return <Loading />;
+    }
+
+    if (isError || !bill) {
+        return (
+            <div className="max-w-2xl mx-auto pt-20 flex justify-center">
+                <p className="text-destructive text-sm">Bill not found.</p>
+            </div>
+        );
+    }
+
+    const participants = bill.participants ?? [];
+    const collected = participants.filter((p: any) => p.status === "paid").reduce((sum: number, p: any) => sum + Number(p.amount_owed), 0);
+    const percent = Math.round((collected / Number(bill.total_amount)) * 100);
+    const paidCount = participants.filter((p: any) => p.status === "paid").length;
     const status = statusConfig[bill.status as keyof typeof statusConfig];
 
-    const copyLink = () => {
-        navigator.clipboard.writeText(`${window.location.origin}/pay/${bill.uuid}`);
-        toast.success("Link copied!", { description: "Share it via WhatsApp or Telegram." });
-    };
-
-    const remindAll = () => {
-        toast.success("Reminders sent!", { description: "Unpaid members have been notified." });
-    };
-
-    const toggleStatus = (id: number) => {
-        setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, status: p.status === "paid" ? "unpaid" : "paid", paid_at: p.status === "paid" ? null : "Now" } : p)));
-        toast.success("Payment status updated.");
-    };
+    // const remindAll = () => {
+    //     toast.success("Reminders sent!", { description: "Unpaid members have been notified." });
+    // };
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }} className="max-w-2xl mx-auto space-y-6 pb-10">
@@ -68,16 +63,46 @@ export default function BillDetailPage() {
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
-                    <Button asChild variant="outline" size="sm" className="gap-1.5 rounded-lg border-border text-sm">
+                    {/* <Button asChild variant="outline" size="sm" className="gap-1.5 rounded-lg border-border text-sm">
                         <Link href={`/bills/${bill.uuid}/edit`}>
                             <Edit className="w-3.5 h-3.5" />
                             Edit
                         </Link>
-                    </Button>
-                    <Button variant="outline" size="sm" className="gap-1.5 rounded-lg border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive text-sm">
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Delete
-                    </Button>
+                    </Button> */}
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="gap-1.5 rounded-lg border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive text-sm">
+                                <Trash2 className="w-3.5 h-3.5" />
+                                Delete
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Delete bill?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Are you sure you want to delete <span className="font-semibold text-foreground">&quot;{bill.title}&quot;</span>? This will also remove all participants and uploaded files. This action cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={() =>
+                                        deleteBill(bill.uuid, {
+                                            onSuccess: () => {
+                                                toast.success("Bill deleted.");
+                                                router.push("/dashboard");
+                                            },
+                                            onError: () => toast.error("Failed to delete bill."),
+                                        })
+                                    }
+                                    disabled={isDeleting}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                    {isDeleting ? "Deleting..." : "Delete"}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             </div>
 
@@ -92,9 +117,11 @@ export default function BillDetailPage() {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h1 className="text-lg font-bold text-foreground">{bill.title}</h1>
-                                <Badge variant="outline" className={`text-xs ${status.class}`}>
-                                    {status.label}
-                                </Badge>
+                                {status && (
+                                    <Badge variant="outline" className={`text-xs ${status.class}`}>
+                                        {status.label}
+                                    </Badge>
+                                )}
                             </div>
                             {bill.description && <p className="text-sm text-muted-foreground mt-0.5">{bill.description}</p>}
                         </div>
@@ -107,10 +134,12 @@ export default function BillDetailPage() {
 
                 {/* Meta info */}
                 <div className="flex flex-wrap gap-4 text-xs text-muted-foreground mb-5">
-                    <span className="flex items-center gap-1.5">
-                        <CalendarDays className="w-3.5 h-3.5" />
-                        Due {bill.due_date}
-                    </span>
+                    {bill.due_date && (
+                        <span className="flex items-center gap-1.5">
+                            <CalendarDays className="w-3.5 h-3.5" />
+                            Due {bill.due_date}
+                        </span>
+                    )}
                     <span className="flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5" />
                         Created {bill.created_at}
@@ -140,72 +169,119 @@ export default function BillDetailPage() {
                         <span>
                             {paidCount} of {participants.length} paid
                         </span>
-                        <span>RM {bill.total_amount - collected} remaining</span>
+                        <span>RM {Number(bill.total_amount) - collected} remaining</span>
                     </div>
                 </div>
 
-                {/* Action buttons */}
-                <div className="flex gap-2 pt-2">
-                    <Button onClick={copyLink} variant="outline" size="sm" className="flex-1 h-10 rounded-xl border-border gap-2 text-sm font-medium hover:bg-muted transition-all">
-                        <Copy className="w-3.5 h-3.5" />
-                        Copy link
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1 h-10 rounded-xl border-border gap-2 text-sm font-medium hover:bg-muted transition-all" asChild>
-                        <Link href={`/pay/${bill.uuid}`} target="_blank">
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            Preview
-                        </Link>
-                    </Button>
-                    <Button onClick={remindAll} size="sm" className="flex-1 h-10 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground gap-2 text-sm font-medium transition-all">
+                {/* Remind all button */}
+                {/* <div className="pt-2 flex justify-end">
+                    <Button onClick={remindAll} size="sm" className="h-10 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground gap-2 text-sm font-medium transition-all">
                         <Bell className="w-3.5 h-3.5" />
                         Remind all
                     </Button>
-                </div>
+                </div> */}
             </motion.div>
 
             {/* Participants card */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.4 }} className="bg-card border border-border rounded-2xl p-6">
-                <div className="flex items-center gap-2 mb-5">
-                    <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-                        <Users className="w-4 h-4 text-accent-foreground" />
+                <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
+                            <Users className="w-4 h-4 text-accent-foreground" />
+                        </div>
+                        <h2 className="font-semibold text-foreground">Participants</h2>
                     </div>
-                    <h2 className="font-semibold text-foreground">Participants</h2>
+                    <span className="text-xs text-muted-foreground">
+                        {paidCount}/{participants.length} paid
+                    </span>
                 </div>
 
-                <div className="space-y-3">
-                    {participants.map((p, i) => (
+                <div className="space-y-2">
+                    {participants.map((p: any, i: number) => (
                         <motion.div
                             key={p.id}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.25 + i * 0.07, duration: 0.35 }}
-                            className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border"
+                            className="flex items-center justify-between px-4 py-3 rounded-xl bg-muted/20 border border-border hover:bg-muted/30 transition-colors"
                         >
                             {/* Left */}
                             <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">{p.name[0]}</div>
+                                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary shrink-0">{p.name[0]}</div>
                                 <div>
-                                    <p className="text-sm font-medium text-foreground">{p.name}</p>
-                                    <p className="text-xs text-muted-foreground">{p.phone}</p>
+                                    <p className="text-sm font-medium text-foreground leading-tight">{p.name}</p>
+                                    {p.paid_at ? (
+                                        <p className="text-xs text-muted-foreground mt-0.5">Paid {p.paid_at}</p>
+                                    ) : (
+                                        <>
+                                            <p className="text-xs text-muted-foreground mt-0.5">{p.phone}</p>
+                                            <p className="text-xs text-muted-foreground">{p.email}</p>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
                             {/* Right */}
-                            <div className="flex items-center gap-3">
-                                <div className="text-right">
-                                    <p className="text-sm font-semibold text-foreground">RM {p.amount_owed}</p>
-                                    {p.paid_at && <p className="text-xs text-muted-foreground">{p.paid_at}</p>}
-                                </div>
+                            <div className="flex items-center gap-2">
+                                <p className="text-sm font-semibold text-foreground mr-1">RM {p.amount_owed}</p>
+
+                                {/* Copy link */}
                                 <motion.button
-                                    whileHover={{ scale: 1.03 }}
-                                    whileTap={{ scale: 0.97 }}
-                                    onClick={() => toggleStatus(p.id)}
-                                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-200 ${
-                                        p.status === "paid" ? "bg-accent text-accent-foreground hover:bg-accent/80" : "bg-destructive/10 text-destructive hover:bg-destructive/20"
-                                    }`}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(`${window.location.origin}/payment/${p.token}`);
+                                        toast.success("Link copied!", {
+                                            description: `Payment link for ${p.name} copied.`,
+                                        });
+                                    }}
+                                    className="w-8 h-8 rounded-lg border border-border bg-background hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
                                 >
-                                    {p.status === "paid" ? "Paid" : "Unpaid"}
+                                    <Copy className="w-3.5 h-3.5" />
                                 </motion.button>
+
+                                {/* WhatsApp */}
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => {
+                                        const link = `${window.location.origin}/payment/${p.token}`;
+                                        const msg = encodeURIComponent(`Hi ${p.name}, sila bayar RM ${p.amount_owed} melalui link ni: ${link}`);
+                                        window.open(`https://wa.me/${p.phone}?text=${msg}`, "_blank");
+                                    }}
+                                    className="w-8 h-8 rounded-lg border border-border bg-background hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
+                                >
+                                    <MessageCircle className="w-3.5 h-3.5" />
+                                </motion.button>
+
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <button
+                                            disabled={isToggling}
+                                            className={`text-xs px-3 py-1.5 rounded-full font-medium min-w-16 text-center border flex items-center gap-1 transition-opacity ${isToggling ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${
+                                                p.status === "paid"
+                                                    ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20"
+                                                    : p.status === "pending"
+                                                      ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/20"
+                                                      : "bg-destructive/10 text-destructive border-destructive/20"
+                                            }`}
+                                        >
+                                            {p.status === "paid" ? "Paid" : p.status === "pending" ? "Pending" : "Unpaid"}
+                                            <ChevronDown className="w-3 h-3" />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-32">
+                                        <DropdownMenuItem onClick={() => toggleStatus({ bill_uuid: uuid, participant_id: p.id, status: "unpaid" })} className="text-destructive focus:text-destructive">
+                                            Unpaid
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => toggleStatus({ bill_uuid: uuid, participant_id: p.id, status: "pending" })} className="text-yellow-400 focus:text-yellow-400">
+                                            Pending
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => toggleStatus({ bill_uuid: uuid, participant_id: p.id, status: "paid" })} className="text-emerald-400 focus:text-emerald-400">
+                                            Paid
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         </motion.div>
                     ))}
@@ -222,13 +298,36 @@ export default function BillDetailPage() {
                 </div>
 
                 {bill.bill_file_path ? (
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border">
-                        <Receipt className="w-5 h-5 text-primary" />
-                        <span className="text-sm text-foreground flex-1">bill-receipt.pdf</span>
-                        <Button variant="ghost" size="sm" className="text-primary h-8 px-3 text-xs">
-                            View
-                        </Button>
-                    </div>
+                    <>
+                        <div onClick={() => setReceiptOpen(true)} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border hover:bg-muted/70 transition-colors cursor-pointer">
+                            <Receipt className="w-5 h-5 text-primary" />
+                            <span className="text-sm text-foreground flex-1">Receipt {bill.title}</span>
+                            <span className="text-xs text-primary font-medium">View</span>
+                        </div>
+
+                        {/* Lightbox */}
+                        {receiptOpen && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setReceiptOpen(false)} className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+                                <button onClick={() => setReceiptOpen(false)} className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+
+                                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.2 }} onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
+                                    {attachmentLoading ? (
+                                        <div className="flex flex-col items-center gap-3 text-white">
+                                            <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <p className="text-sm text-white/70">Loading...</p>
+                                        </div>
+                                    ) : attachmentUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={attachmentUrl} alt={`Receipt for ${bill.title}`} className="max-w-full max-h-[85vh] rounded-xl object-contain" />
+                                    ) : (
+                                        <p className="text-white/70 text-sm">Failed to load image.</p>
+                                    )}
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </>
                 ) : (
                     <p className="text-sm text-muted-foreground">No attachment uploaded.</p>
                 )}

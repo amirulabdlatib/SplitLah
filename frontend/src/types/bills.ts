@@ -1,5 +1,6 @@
 export interface Bill {
     id: string;
+    bill_uuid: string;
     title: string;
     total: number;
     collected: number;

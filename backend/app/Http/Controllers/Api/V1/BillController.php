@@ -11,8 +11,11 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+
 
 class BillController extends Controller
 {
@@ -21,7 +24,7 @@ class BillController extends Controller
         $bills = Bill::with('participants:id,bill_id,status,amount_owed')
             ->where('user_id', Auth::id())
             ->latest()
-            ->select('id', 'title', 'total_amount', 'due_date', 'status')
+            ->select('id', 'title', 'total_amount', 'due_date', 'status', 'bill_uuid')
             ->get()
             ->map(function ($bill) {
                 $totalParticipants = $bill->participants->count();
@@ -33,13 +36,14 @@ class BillController extends Controller
 
                 return [
                     'id'           => $bill->id,
+                    'bill_uuid'    => $bill->bill_uuid,
                     'title'        => $bill->title,
                     'total'        => $bill->total_amount,
                     'collected'    => $collected,
                     'percent'      => $percent,
                     'participants' => $totalParticipants,
                     'paid'         => $paidCount,
-                    'due_date'     => $bill->due_date,
+                    'due_date'      => $bill->due_date->format('d M Y'),
                     'status'       => $bill->status,
                 ];
             });
@@ -58,7 +62,7 @@ class BillController extends Controller
             'split_type'                 => 'required|in:equal,custom',
             'due_date'                   => 'required|date|after_or_equal:today',
             'auto_confirm'               => 'boolean',
-            'bill_file'                  => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'bill_file'                  => 'nullable|file|mimes:jpg,jpeg,png|max:1024',
             'participants'               => 'required|array|min:1',
             'participants.*.name'        => 'required|string|max:255',
             'participants.*.email'       => 'nullable|email|max:255|required_without:participants.*.phone',
@@ -110,7 +114,7 @@ class BillController extends Controller
                 'amount_owed' => $validated['split_type'] === 'equal'
                     ? $equalShare
                     : (float) $participant['amount_owed'],
-                'status'      => ParticipantStatus::PENDING->value,
+                'status'      => ParticipantStatus::UNPAID->value,
                 'created_at'  => now(),
                 'updated_at'  => now(),
             ])->toArray();
@@ -122,5 +126,120 @@ class BillController extends Controller
             ['message' => 'Bill created successfully'],
             Response::HTTP_CREATED
         );
+    }
+
+    public function show(string $bill_uuid)
+    {
+        $bill = Bill::where('bill_uuid', $bill_uuid)
+            ->where('user_id', Auth::id())
+            ->with('participants')
+            ->firstOrFail();
+
+        return response()->json([
+            'id'             => $bill->id,
+            'uuid'           => $bill->bill_uuid,
+            'title'          => $bill->title,
+            'description'    => $bill->description,
+            'total_amount'   => $bill->total_amount,
+            'split_type'     => $bill->split_type,
+            'status'         => $bill->status,
+            'due_date'       => $bill->due_date ? $bill->due_date->format('d M Y') : null,
+            'auto_confirm'   => $bill->auto_confirm,
+            'bill_file_path' => $bill->bill_file_path,
+            'created_at'     => $bill->created_at->format('d M Y'),
+            'participants'   => $bill->participants->map(fn($participant) => [
+                'id'          => $participant->id,
+                'name'        => $participant->name,
+                'email'       => $participant->email,
+                'phone'       => $participant->phone,
+                'token'       => $participant->token,
+                'amount_owed' => $participant->amount_owed,
+                'status'      => $participant->status,
+                'paid_at'     => $participant->paid_at ? $participant->paid_at->format('d M Y') : null,
+            ]),
+        ]);
+    }
+
+    public function attachment(string $bill_uuid)
+    {
+        $bill = Bill::where('bill_uuid', $bill_uuid)->firstOrFail();
+
+        if ($bill->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if (!$bill->bill_file_path) {
+            abort(404);
+        }
+
+        return Storage::disk('private')->response($bill->bill_file_path);
+    }
+
+    public function destroy(String $bill_uuid)
+    {
+        $bill = Bill::where('bill_uuid', $bill_uuid)->first();
+
+        if (!$bill) {
+            return response()->json([
+                'message' => 'Bill not found'
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($bill->user_id !== Auth::id()) {
+            return response()->json([
+                'message' => 'Unauthorized.'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        try {
+            DB::transaction(function () use ($bill) {
+
+                $participants = Participant::where('bill_id', $bill->id)->get();
+
+                foreach ($participants as $participant) {
+                    if ($participant->receipt_path && Storage::exists($participant->receipt_path)) {
+                        Storage::delete($participant->receipt_path);
+                    }
+                }
+
+                Participant::where('bill_id', $bill->id)->delete();
+
+                if ($bill->bill_file_path && Storage::exists($bill->bill_file_path)) {
+                    Storage::delete($bill->bill_file_path);
+                }
+
+                $bill->delete();
+            });
+
+            return response()->noContent();
+        } catch (\Throwable $e) {
+
+            Log::error('Failed to delete bill.', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'message' => 'Failed to delete bill.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function toggleParticipantStatus(Request $request, Participant $participant)
+    {
+        $request->validate([
+            'status' => ['required', 'in:paid,pending,unpaid'],
+        ]);
+
+        $participant->update([
+            'status' => $request->status,
+            'paid_at' => $request->status == ParticipantStatus::PAID->value ? now() : null,
+        ]);
+
+        return response()->json([
+            'message' => 'Status updated successfully.',
+            'data'    => [
+                'uuid'   => $participant->uuid,
+                'status' => $participant->status,
+            ],
+        ]);
     }
 }
