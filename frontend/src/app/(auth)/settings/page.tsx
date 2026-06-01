@@ -102,16 +102,22 @@ export default function SettingsPage() {
                         </motion.div>
                     )}
 
-                    <Button type="submit" disabled={paymentLoading} className="h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 hover:scale-[1.01] active:scale-[0.98]">
-                        {paymentLoading ? (
-                            <span className="flex items-center gap-2">
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Saving...
-                            </span>
-                        ) : (
-                            "Save payment details"
-                        )}
-                    </Button>
+                    <div className="flex justify-end pt-5">
+                        <Button
+                            type="submit"
+                            disabled={paymentLoading}
+                            className="h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 hover:scale-[1.01] active:scale-[0.98]"
+                        >
+                            {paymentLoading ? (
+                                <span className="flex items-center gap-2">
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Saving...
+                                </span>
+                            ) : (
+                                "Save payment details"
+                            )}
+                        </Button>
+                    </div>
                 </form>
             </motion.div>
         </motion.div>
