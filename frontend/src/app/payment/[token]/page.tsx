@@ -41,6 +41,7 @@ export default function PaymentPage({ params }: { params: Promise<{ token: strin
     const percent = Math.round((collected / bill.total_amount) * 100);
     const paidCount = participants.filter((p: any) => p.status === "paid").length;
     const isPaid = current_participant.status === "paid";
+    const isPendingPaymentStatus = current_participant.status === "pending";
 
     const handleConfirm = async () => {
         try {
@@ -125,16 +126,22 @@ export default function PaymentPage({ params }: { params: Promise<{ token: strin
                                         <span
                                             key={p.id}
                                             className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                                                p.status === "paid" ? "bg-accent text-accent-foreground" : p.id === current_participant.id ? "bg-primary/10 text-primary border border-primary/30" : "bg-muted text-muted-foreground"
+                                                p.status === "paid"
+                                                    ? "bg-accent text-accent-foreground"
+                                                    : p.status === "pending"
+                                                      ? "bg-yellow-500/10 text-yellow-600 border border-yellow-500/30"
+                                                      : p.id === current_participant.id
+                                                        ? "bg-primary/10 text-primary border border-primary/30"
+                                                        : "bg-muted text-muted-foreground"
                                             }`}
                                         >
-                                            {p.name} {p.status === "paid" ? "✓" : p.id === current_participant.id ? "(you)" : ""}
+                                            {p.name} {p.status === "paid" ? "✓" : p.status === "pending" ? "⏳" : p.id === current_participant.id ? "(you)" : ""}
                                         </span>
                                     ))}
                                 </div>
                             </div>
 
-                            {!isPaid && (
+                            {!isPaid && !isPendingPaymentStatus && (
                                 <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.4 }} className="bg-card border border-border rounded-2xl p-6 space-y-4">
                                     <h2 className="font-semibold text-foreground">Payment details</h2>
 
@@ -179,6 +186,18 @@ export default function PaymentPage({ params }: { params: Promise<{ token: strin
                                     >
                                         <CheckCircle className="w-4 h-4" />I have paid — confirm now
                                     </Button>
+                                </motion.div>
+                            )}
+
+                            {isPendingPaymentStatus && (
+                                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-6 flex flex-col items-center text-center gap-3">
+                                    <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                                        <Clock className="w-6 h-6 text-yellow-600" />
+                                    </div>
+                                    <h2 className="font-bold text-foreground">Payment submitted!</h2>
+                                    <p className="text-sm text-muted-foreground">
+                                        Your payment is awaiting confirmation from the <span className="uppercase">{bill.organiser.name}</span>.
+                                    </p>
                                 </motion.div>
                             )}
 
