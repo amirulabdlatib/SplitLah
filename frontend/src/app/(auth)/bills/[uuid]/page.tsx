@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowLeft, Bell, CalendarDays, CheckCircle, Clock, Copy, Edit, ExternalLink, Receipt, Trash2, Users, Wallet } from "lucide-react";
+import { ArrowLeft, Bell, CalendarDays, CheckCircle, Clock, Edit, Receipt, Trash2, Users, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -42,11 +42,6 @@ export default function BillDetailPage() {
     const percent = Math.round((collected / bill.total_amount) * 100);
     const paidCount = participants.filter((p) => p.status === "paid").length;
     const status = statusConfig[bill.status as keyof typeof statusConfig];
-
-    const copyLink = () => {
-        navigator.clipboard.writeText(`${window.location.origin}/pay/${bill.uuid}`);
-        toast.success("Link copied!", { description: "Share it via WhatsApp or Telegram." });
-    };
 
     const remindAll = () => {
         toast.success("Reminders sent!", { description: "Unpaid members have been notified." });
@@ -145,18 +140,8 @@ export default function BillDetailPage() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex gap-2 pt-2">
-                    <Button onClick={copyLink} variant="outline" size="sm" className="flex-1 h-10 rounded-xl border-border gap-2 text-sm font-medium hover:bg-muted transition-all">
-                        <Copy className="w-3.5 h-3.5" />
-                        Copy link
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1 h-10 rounded-xl border-border gap-2 text-sm font-medium hover:bg-muted transition-all" asChild>
-                        <Link href={`/pay/${bill.uuid}`} target="_blank">
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            Preview
-                        </Link>
-                    </Button>
-                    <Button onClick={remindAll} size="sm" className="flex-1 h-10 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground gap-2 text-sm font-medium transition-all">
+                <div className="pt-2 flex justify-end">
+                    <Button onClick={remindAll} size="sm" className="h-10 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground gap-2 text-sm font-medium transition-all">
                         <Bell className="w-3.5 h-3.5" />
                         Remind all
                     </Button>
